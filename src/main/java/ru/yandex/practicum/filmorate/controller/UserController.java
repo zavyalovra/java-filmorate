@@ -62,7 +62,10 @@ public class UserController {
 
             if (newUser.getLogin() != null) {
                 boolean isLoginExists = users.values().stream()
-                        .anyMatch(login -> login.getLogin().equals(newUser.getLogin()));
+                        .anyMatch(user ->
+                                !user.getId().equals(newUser.getId()) && user.getLogin().equals(newUser.getLogin())
+                        );
+
                 if (isLoginExists) {
                     throw new ValidationException("Этот логин уже используется");
                 }
@@ -71,7 +74,10 @@ public class UserController {
 
             if (newUser.getEmail() != null) {
                 boolean isEmailExists = users.values().stream()
-                        .anyMatch(email -> email.getEmail().equals(newUser.getEmail()));
+                        .anyMatch(user ->
+                                !user.getId().equals(newUser.getId()) && user.getEmail().equals(newUser.getEmail())
+                        );
+
                 if (isEmailExists) {
                     throw new ValidationException("Этот имейл уже используется");
                 }
