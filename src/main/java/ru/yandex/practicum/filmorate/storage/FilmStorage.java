@@ -10,6 +10,4 @@ public interface FilmStorage {
     void create(Film film);
 
     Film update(Film film);
-
-    void delete(Film film);
 }

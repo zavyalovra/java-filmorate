@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.ErrorResponse;
@@ -22,6 +23,16 @@ public class ErrorHandler {
     public ErrorResponse handleNotFound(NotFoundException e) {
         log.warn("NotFoundException: {};", e.getMessage());
         return new ErrorResponse("Ресурс не найден", e.getMessage());
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNoHandlerFound(NoHandlerFoundException e) {
+        log.warn("NoHandlerFoundException: {};", e.getRequestURL());
+        return new ErrorResponse(
+                "Эндпоинт не найден",
+                "Запрошенный эндпоинт " + e.getRequestURL() + " не существует"
+        );
     }
 
     @ExceptionHandler(ValidationException.class)

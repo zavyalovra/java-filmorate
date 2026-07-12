@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,16 +24,34 @@ public class FilmService {
         this.userStorage = userStorage;
     }
 
+    public Collection<Film> findAll() {
+        return filmStorage.get();
+    }
+
+    public void create(Film film) {
+        filmStorage.create(film);
+    }
+
+    public Film update(Film film) {
+        return filmStorage.update(film);
+    }
+
+    public Optional<Film> findFilmById(Long id) {
+        return filmStorage.get().stream()
+                .filter(f -> f.getId().equals(id))
+                .findFirst();
+    }
+
     public void addRate(Long filmId, Long userId) {
         Film film = filmStorage.get().stream()
                 .filter(f -> f.getId().equals(filmId))
                 .findFirst()
-                .orElseThrow(() -> new ValidationException("Фильм с id = " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
 
         User user = userStorage.get().stream()
                 .filter(u -> u.getId().equals(userId))
                 .findFirst()
-                .orElseThrow(() -> new ValidationException("Пользователь с id = " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         if (film.getRating() == null) {
             film.setRating(new HashSet<>());
@@ -45,12 +64,12 @@ public class FilmService {
         Film film = filmStorage.get().stream()
                 .filter(f -> f.getId().equals(filmId))
                 .findFirst()
-                .orElseThrow(() -> new ValidationException("Фильм с id = " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
 
         User user = userStorage.get().stream()
                 .filter(u -> u.getId().equals(userId))
                 .findFirst()
-                .orElseThrow(() -> new ValidationException("Пользователь с id = " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         if (film.getRating() != null) {
             film.getRating().remove(userId);

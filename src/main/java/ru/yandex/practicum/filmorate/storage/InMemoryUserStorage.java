@@ -95,20 +95,6 @@ public class InMemoryUserStorage implements UserStorage {
         return oldUser;
     }
 
-    @Override
-    public void delete(User user) {
-        if (user.getId() == null) {
-            throw new ValidationException("Id должен быть указан");
-        }
-
-        if (!users.containsKey(user.getId())) {
-            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
-        }
-
-        log.info("Удаление пользователя: {}", user);
-        users.remove(user.getId());
-    }
-
     private long getNextId() {
         long currentMaxId = users.keySet()
                 .stream()
