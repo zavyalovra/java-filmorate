@@ -48,16 +48,16 @@ public class FilmController {
         return filmService.update(film);
     }
 
-    @PutMapping("/{id}/like/{userId}")
+    @PutMapping("/{id}/like/{filmId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void addFriend(@PathVariable Long id, @PathVariable Long userId) {
-        filmService.addRate(id, userId);
+    public void addFriend(@PathVariable Long id, @PathVariable Long filmId) {
+        filmService.addRate(id, filmId);
     }
 
-    @DeleteMapping("/{id}/like/{userId}")
+    @DeleteMapping("/{id}/like/{filmId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeFriend(@PathVariable Long id, @PathVariable Long userId) {
-        filmService.removeRate(id, userId);
+    public void removeFriend(@PathVariable Long id, @PathVariable Long filmId) {
+        filmService.removeRate(id, filmId);
     }
 
     @GetMapping("/popular")

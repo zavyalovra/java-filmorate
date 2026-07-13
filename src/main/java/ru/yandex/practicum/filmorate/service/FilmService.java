@@ -2,14 +2,12 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -37,43 +35,21 @@ public class FilmService {
     }
 
     public Optional<Film> findFilmById(Long id) {
-        return filmStorage.get().stream()
-                .filter(f -> f.getId().equals(id))
-                .findFirst();
+        return Optional.ofNullable(filmStorage.findFilmById(id));
     }
 
     public void addRate(Long filmId, Long userId) {
-        Film film = filmStorage.get().stream()
-                .filter(f -> f.getId().equals(filmId))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        Film film = filmStorage.findFilmById(filmId);
+        User user = userStorage.findUserById(userId);
 
-        User user = userStorage.get().stream()
-                .filter(u -> u.getId().equals(userId))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
-
-        if (film.getRating() == null) {
-            film.setRating(new HashSet<>());
-        }
-
-        film.getRating().add(userId);
+        film.getRating().add(user.getId());
     }
 
     public void removeRate(Long filmId, Long userId) {
-        Film film = filmStorage.get().stream()
-                .filter(f -> f.getId().equals(filmId))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        Film film = filmStorage.findFilmById(filmId);
+        User user = userStorage.findUserById(userId);
 
-        User user = userStorage.get().stream()
-                .filter(u -> u.getId().equals(userId))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
-
-        if (film.getRating() != null) {
-            film.getRating().remove(userId);
-        }
+        film.getRating().remove(user.getId());
     }
 
     public Collection<Film> getPopular(int count) {

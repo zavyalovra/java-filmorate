@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.model;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -34,5 +35,5 @@ public class Film {
         return !releaseDate.isBefore(minReleaseDate);
     }
 
-    private Set<Long> rating;
+    private Set<Long> rating = new HashSet<>();
 }
