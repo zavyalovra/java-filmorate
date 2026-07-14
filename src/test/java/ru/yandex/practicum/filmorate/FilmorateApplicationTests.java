@@ -28,7 +28,7 @@ class FilmorateApplicationTests {
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		assertNotNull(response.getBody());
 		JsonObject json = JsonParser.parseString(response.getBody()).getAsJsonObject();
-		assertEquals("Ошибка валидации", json.get("title").getAsString());
+		assertEquals("Ошибка валидации", json.get("error").getAsString());
 	}
 
 
@@ -72,7 +72,7 @@ class FilmorateApplicationTests {
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		assertNotNull(response.getBody());
 		JsonObject json = JsonParser.parseString(response.getBody()).getAsJsonObject();
-		assertEquals("Ошибка валидации", json.get("title").getAsString());
+		assertEquals("Ошибка валидации", json.get("error").getAsString());
 	}
 
 	@Test
@@ -91,7 +91,7 @@ class FilmorateApplicationTests {
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		assertNotNull(response.getBody());
 		JsonObject json = JsonParser.parseString(response.getBody()).getAsJsonObject();
-		assertEquals("Ошибка валидации", json.get("title").getAsString());
+		assertEquals("Ошибка валидации", json.get("error").getAsString());
 	}
 
 	@Test
@@ -111,7 +111,7 @@ class FilmorateApplicationTests {
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		assertNotNull(response.getBody());
 		JsonObject json = JsonParser.parseString(response.getBody()).getAsJsonObject();
-		assertEquals("Ошибка валидации", json.get("title").getAsString());
+		assertEquals("Ошибка валидации", json.get("error").getAsString());
 	}
 
 	@Test
@@ -144,7 +144,7 @@ class FilmorateApplicationTests {
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		assertNotNull(response.getBody());
 		JsonObject json = JsonParser.parseString(response.getBody()).getAsJsonObject();
-		assertEquals("Ошибка валидации", json.get("title").getAsString());
+		assertEquals("Ошибка валидации", json.get("error").getAsString());
 	}
 
 	@Test
@@ -190,7 +190,7 @@ class FilmorateApplicationTests {
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		assertNotNull(response.getBody());
 		JsonObject json = JsonParser.parseString(response.getBody()).getAsJsonObject();
-		assertEquals("Ошибка валидации", json.get("title").getAsString());
+		assertEquals("Ошибка валидации", json.get("error").getAsString());
 	}
 
 	@Test
@@ -209,7 +209,7 @@ class FilmorateApplicationTests {
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		assertNotNull(response.getBody());
 		JsonObject json = JsonParser.parseString(response.getBody()).getAsJsonObject();
-		assertEquals("Ошибка валидации", json.get("title").getAsString());
+		assertEquals("Ошибка валидации", json.get("error").getAsString());
 	}
 
 	@Test
@@ -255,7 +255,7 @@ class FilmorateApplicationTests {
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 		assertNotNull(response.getBody());
 		JsonObject json = JsonParser.parseString(response.getBody()).getAsJsonObject();
-		assertEquals("Ошибка валидации", json.get("title").getAsString());
+		assertEquals("Ошибка валидации", json.get("error").getAsString());
 	}
 
 	@Test
