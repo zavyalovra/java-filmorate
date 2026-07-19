@@ -36,4 +36,10 @@ public class Film {
     }
 
     private Set<Long> rating = new HashSet<>();
+
+    @NotNull
+    private Set<Genre> genres;
+
+    @NotNull
+    private Mpa mpa;
 }
