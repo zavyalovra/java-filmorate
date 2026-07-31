@@ -1,0 +1,21 @@
+spring:
+  main:
+    banner-mode: CONSOLE
+    log-startup-info: true
+  banner:
+    location: banner.txt
+  web:
+    resources:
+      add-mappings: false   # Запросы к статическим файлам не будут обрабатываться автоматически
+  datasource:
+    url: jdbc:h2:file:./db/filmorate
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  sql:
+    init:
+      mode: always
+
+logging.level:
+  root: INFO
+  org.zalando.logbook: WARN
