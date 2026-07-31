@@ -1,8 +1,11 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,6 +29,7 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private int duration;
 
+    @JsonIgnore
     @AssertTrue(message = "Дата релиза — не раньше 28 декабря 1895 года")
     public boolean isReleaseDateValid() {
         if (releaseDate == null) {
@@ -37,7 +41,7 @@ public class Film {
 
     private Set<Long> rating = new HashSet<>();
 
-    private Set<Genre> genres = new HashSet<>();
+    private Collection<Genre> genres = new ArrayList<>();
 
     private Mpa mpa;
 }
