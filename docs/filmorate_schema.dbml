@@ -1,10 +1,10 @@
 Table films {
   id bigint [increment, primary key]
   name varchar(200) [not null]
-  description varchar(200) [not null]
+  description varchar(200)
   release_date date [not null]
   duration integer [not null]
-  mpa_id bigint [ref: > mpa.id]
+  mpa_id bigint [not null, ref: > mpa.id]
 }
 
 Table users {

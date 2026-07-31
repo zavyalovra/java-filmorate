@@ -39,5 +39,5 @@ public class Film {
 
     private Set<Genre> genres = new HashSet<>();
 
-    private Mpa mpa = new Mpa();
+    private Mpa mpa;
 }

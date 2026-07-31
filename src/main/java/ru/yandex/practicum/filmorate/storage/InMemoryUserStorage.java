@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -22,7 +23,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void create(User user) {
+    public User create(User user) {
         boolean isLoginExists = users.values().stream()
                 .anyMatch(login -> login.getLogin().equals(user.getLogin()));
         if (isLoginExists) {
@@ -45,6 +46,8 @@ public class InMemoryUserStorage implements UserStorage {
 
         log.info("Создание пользователя: {}", user);
         users.put(user.getId(), user);
+
+        return user;
     }
 
     @Override
@@ -96,11 +99,8 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User findUserById(Long id) {
-        if (!users.containsKey(id)) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
-        return users.get(id);
+    public Optional<User> findById(Long id) {
+        return Optional.ofNullable(users.get(id));
     }
 
     private long getNextId() {

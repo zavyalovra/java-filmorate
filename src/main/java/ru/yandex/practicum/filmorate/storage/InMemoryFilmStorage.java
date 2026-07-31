@@ -9,11 +9,11 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
-
     private final Map<Long, Film> films = new HashMap<>();
 
     @Override
@@ -22,7 +22,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void create(Film film) {
+    public Film create(Film film) {
         boolean isTitleExists = films.values().stream()
                 .anyMatch(name -> name.getName().equals(film.getName()));
 
@@ -33,6 +33,8 @@ public class InMemoryFilmStorage implements FilmStorage {
         film.setId(getNextId());
         log.info("Создание фильма: {}", film);
         films.put(film.getId(), film);
+
+        return film;
     }
 
     @Override
@@ -40,10 +42,8 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (film.getId() == null) {
             throw new ValidationException("Id должен быть указан");
         }
-
-        if (!films.containsKey(film.getId())) {
-            throw new NotFoundException("Фильм с id " + film.getId() + " не найден");
-        }
+        findById(film.getId())
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + film.getId() + " не найден"));
 
         log.info("Обновление фильма: {}", film);
         films.put(film.getId(), film);
@@ -51,11 +51,8 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film findFilmById(Long id) {
-        if (!films.containsKey(id)) {
-            throw new NotFoundException("Фильм с id " + id + " не найден");
-        }
-        return films.get(id);
+    public Optional<Film> findById(Long id) {
+        return Optional.ofNullable(films.get(id));
     }
 
     private long getNextId() {
