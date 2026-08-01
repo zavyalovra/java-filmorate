@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.jdbc.FilmLikesDbStorage;
 import ru.yandex.practicum.filmorate.dao.jdbc.MpaDbStorage;
 import ru.yandex.practicum.filmorate.dao.storage.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -22,6 +23,7 @@ public class FilmService {
     private final GenreStorage genreStorage;
     private final FilmGenreStorage filmGenreStorage;
     private final MpaDbStorage mpaDbStorage;
+    private final FilmLikesDbStorage filmLikesDbStorage;
 
     @Autowired
     public FilmService(
@@ -29,13 +31,15 @@ public class FilmService {
             @Qualifier("userDbStorage") UserStorage userStorage,
             @Qualifier("genreDbStorage") GenreStorage genreStorage,
             @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
-            @Qualifier("mpaDbStorage") MpaDbStorage mpaDbStorage) {
+            @Qualifier("mpaDbStorage") MpaDbStorage mpaDbStorage,
+            @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage) {
 
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.genreStorage = genreStorage;
         this.filmGenreStorage = filmGenreStorage;
         this.mpaDbStorage = mpaDbStorage;
+        this.filmLikesDbStorage = filmLikesDbStorage;
     }
 
     public Collection<Film> findAll() {
@@ -102,13 +106,12 @@ public class FilmService {
     }
 
     public void addRate(Long filmId, Long userId) {
-
         Film film = filmStorage.findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
         User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
-        film.getRating().add(user.getId());
+        filmLikesDbStorage.addLike(filmId, userId);
     }
 
     public void removeRate(Long filmId, Long userId) {
@@ -117,14 +120,21 @@ public class FilmService {
         User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
-        film.getRating().remove(user.getId());
+        filmLikesDbStorage.removeLike(filmId, userId);
     }
 
-    public Collection<Film> getPopular(int count) {
-        return filmStorage.get().stream()
-                .sorted((film1, film2) -> Integer.compare(getRatingCount(film2), getRatingCount(film1)))
-                .limit(count)
-                .collect(Collectors.toList());
+    public Collection<Film> getPopularFilms(int count) {
+        Collection<Film> films = filmStorage.getPopular(count);
+
+        for (Film film : films) {
+            Set<Long> genreIds = filmGenreStorage.getGenresForFilm(film.getId()).stream()
+                    .map(FilmGenre::getGenreId)
+                    .collect(Collectors.toSet());
+            Collection<Genre> genres = genreStorage.getByIds(genreIds);
+            film.setGenres(genres);
+        }
+
+        return films;
     }
 
     private int getRatingCount(Film film) {

@@ -8,10 +8,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -56,6 +53,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Optional<Film> findById(Long id) {
         return Optional.ofNullable(films.get(id));
+    }
+
+    @Override
+    public Collection<Film> getPopular(int count) {
+        throw new NotFoundException("Метод getPopular не поддерживается в InMemoryFilmStorage");
     }
 
     private long getNextId() {

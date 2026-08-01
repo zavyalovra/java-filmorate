@@ -40,6 +40,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, " +
             "duration = ?, mpa_id = ? WHERE id = ?";
+    private static final String GET_POPULAR_QUERY = """
+            SELECT f.*,
+                   m.name AS mpa_name,
+                   COUNT(fl.user_id) AS likes
+            FROM films f
+            LEFT JOIN mpa m ON f.mpa_id = m.id
+            LEFT JOIN film_likes fl ON f.id = fl.film_id
+            GROUP BY f.id
+            ORDER BY likes DESC
+            LIMIT ?
+            """;
 
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
@@ -82,5 +93,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public Optional<Film> findById(Long id) {
         return findOne(FIND_BY_ID_QUERY, id);
+    }
+
+    public Collection<Film> getPopular(int count) {
+        return findMany(GET_POPULAR_QUERY, count);
     }
 }

@@ -14,7 +14,6 @@ import java.util.Optional;
 @Qualifier("userDbStorage")
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
-    private static final String FIND_BY_EMAIL_QUERY = "SELECT * FROM users WHERE email = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";
     private static final String INSERT_QUERY = "INSERT INTO users(email, login, name, birthday)" +
             "VALUES (?, ?, ?, ?)";
@@ -58,6 +57,6 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public Optional<User> findById(Long id) {
-        return findOne(FIND_BY_EMAIL_QUERY, id);
+        return findOne(FIND_BY_ID_QUERY, id);
     }
 }

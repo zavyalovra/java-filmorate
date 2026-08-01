@@ -20,6 +20,10 @@ public abstract class BaseDbStorage<T> {
         this.mapper = mapper;
     }
 
+    protected Long findValue(String query, Object... params) {
+        return jdbc.queryForObject(query, Long.class, params);
+    }
+
     protected Optional<T> findOne(String query, Object... params) {
         try {
             T result = jdbc.queryForObject(query, mapper, params);

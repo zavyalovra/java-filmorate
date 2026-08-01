@@ -32,6 +32,7 @@ public class UserService {
     }
 
     public User update(User user) {
+        findUserById(user.getId());
         return userStorage.update(user);
     }
 
@@ -44,7 +45,7 @@ public class UserService {
         User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         User friend = userStorage.findById(friendId)
-                        .orElseThrow(() -> new NotFoundException("Фильм с id = " + friendId + " не найден"));
+                        .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
 
         log.info("Определение userId = {} и friendId = {} друзьями", userId, friendId);
         user.getFriends().add(friendId);
@@ -55,7 +56,7 @@ public class UserService {
         User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         User friend = userStorage.findById(friendId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + friendId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
 
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
