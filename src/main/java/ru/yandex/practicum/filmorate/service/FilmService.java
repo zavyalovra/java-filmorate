@@ -57,7 +57,7 @@ public class FilmService {
     }
 
     public Film create(Film film) {
-        Mpa mpa = mpaDbStorage.findById(film.getMpa().getId())
+        Mpa mpa = mpaDbStorage.getById(film.getMpa().getId())
                 .orElseThrow(() -> new NotFoundException("Рейтинг с id = " + film.getMpa().getId() + " не найден"));
         film.setMpa(mpa);
 

@@ -105,6 +105,26 @@ public class InMemoryUserStorage implements UserStorage {
         return Optional.ofNullable(users.get(id));
     }
 
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+        throw new NotFoundException("Метод addFriend не поддерживается в InMemoryUserStorage.");
+    }
+
+    @Override
+    public void removeFriend(Long userId, Long friendId) {
+        throw new NotFoundException("Метод removeFriend не поддерживается в InMemoryUserStorage.");
+    }
+
+    @Override
+    public Collection<User> getFriends(Long userId) {
+        throw new NotFoundException("Метод getFriends не поддерживается в InMemoryUserStorage.");
+    }
+
+    @Override
+    public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
+        throw new NotFoundException("Метод getCommonFriends не поддерживается в InMemoryUserStorage.");
+    }
+
     private long getNextId() {
         long currentMaxId = users.keySet()
                 .stream()

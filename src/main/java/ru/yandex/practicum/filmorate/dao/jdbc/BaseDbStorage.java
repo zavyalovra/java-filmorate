@@ -37,6 +37,10 @@ public abstract class BaseDbStorage<T> {
         return jdbc.query(query, mapper, params);
     }
 
+    protected <R> List<R> queryMany(String query, RowMapper<R> rowMapper, Object... params) {
+        return jdbc.query(query, rowMapper, params);
+    }
+
     protected boolean delete(String query, long id) {
         int rowsDeleted = jdbc.update(query, id);
         return rowsDeleted > 0;
@@ -47,6 +51,10 @@ public abstract class BaseDbStorage<T> {
         if (rowsUpdated == 0) {
             throw new InternalServerException("Не удалось обновить данные");
         }
+    }
+
+    protected void execute(String query, Object... params) {
+        jdbc.update(query, params);
     }
 
     protected long insert(String query, Object... params) {

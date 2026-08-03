@@ -30,6 +30,7 @@ public class FilmController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Film create(@Valid @RequestBody Film film) {
         return filmService.create(film);
     }

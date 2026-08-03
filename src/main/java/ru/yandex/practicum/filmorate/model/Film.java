@@ -39,6 +39,8 @@ public class Film {
         return !releaseDate.isBefore(minReleaseDate);
     }
 
+    @JsonIgnore
+    @Deprecated
     private Set<Long> rating = new HashSet<>();
 
     private Collection<Genre> genres = new ArrayList<>();
