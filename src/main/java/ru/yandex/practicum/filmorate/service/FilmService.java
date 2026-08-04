@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.dao.jdbc.FilmLikesDbStorage;
 import ru.yandex.practicum.filmorate.dao.jdbc.MpaDbStorage;
 import ru.yandex.practicum.filmorate.dao.storage.FilmGenreStorage;
@@ -13,6 +14,7 @@ import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.dao.storage.GenreStorage;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,21 +47,26 @@ public class FilmService {
     public Collection<Film> findAll() {
         Collection<Film> films = filmStorage.get();
 
+        Set<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+
+        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
+
         for (Film film : films) {
-            Set<Long> genreIds = filmGenreStorage.getGenresForFilm(film.getId()).stream()
-                    .map(FilmGenre::getGenreId)
-                    .collect(Collectors.toSet());
-            Collection<Genre> genres = genreStorage.getByIds(genreIds);
-            film.setGenres(genres);
+            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
         }
 
         return films;
     }
 
+    @Transactional
     public Film create(Film film) {
-        Mpa mpa = mpaDbStorage.getById(film.getMpa().getId())
-                .orElseThrow(() -> new NotFoundException("Рейтинг с id = " + film.getMpa().getId() + " не найден"));
-        film.setMpa(mpa);
+        if (film.getMpa() != null) {
+            Mpa mpa = mpaDbStorage.getById(film.getMpa().getId())
+                    .orElseThrow(() -> new NotFoundException("Рейтинг с id = " + film.getMpa().getId() + " не найден"));
+            film.setMpa(mpa);
+        }
 
         Set<Long> genreIds = film.getGenres().stream()
                 .map(Genre::getId)
@@ -77,17 +84,29 @@ public class FilmService {
         return findFilmById(created.getId());
     }
 
+    @Transactional
     public Film update(Film film) {
-        Film updatedFilm = filmStorage.update(film);
+        filmStorage.findById(film.getId())
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + film.getId() + " не найден"));
+
+        if (film.getMpa() != null) {
+            Mpa mpa = mpaDbStorage.getById(film.getMpa().getId())
+                    .orElseThrow(() -> new NotFoundException("Рейтинг с id = " + film.getMpa().getId() + " не найден"));
+            film.setMpa(mpa);
+        }
 
         Set<Long> genreIds = film.getGenres().stream()
                 .map(Genre::getId)
                 .collect(Collectors.toSet());
-
         Collection<Genre> genres = genreStorage.getByIds(genreIds);
-        filmGenreStorage.saveGenresForFilm(updatedFilm.getId(), genres);
-        updatedFilm.setGenres(genres);
+        if (genres.size() != genreIds.size()) {
+            throw new NotFoundException("Один или несколько жанров не существуют");
+        }
 
+        Film updatedFilm = filmStorage.update(film);
+        filmGenreStorage.saveGenresForFilm(updatedFilm.getId(), genres);
+
+        updatedFilm.setGenres(genres);
         return updatedFilm;
     }
 
@@ -95,12 +114,8 @@ public class FilmService {
         Film film = filmStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
 
-        Set<Long> genreIds = filmGenreStorage.getGenresForFilm(id).stream()
-                .map(FilmGenre::getGenreId)
-                .collect(Collectors.toSet());
-
-        Collection<Genre> genres = genreStorage.getByIds(genreIds);
-        film.setGenres(genres);
+        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(Set.of(film.getId()));
+        film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
 
         return film;
     }
@@ -126,12 +141,14 @@ public class FilmService {
     public Collection<Film> getPopularFilms(int count) {
         Collection<Film> films = filmStorage.getPopular(count);
 
+        Set<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+
+        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
+
         for (Film film : films) {
-            Set<Long> genreIds = filmGenreStorage.getGenresForFilm(film.getId()).stream()
-                    .map(FilmGenre::getGenreId)
-                    .collect(Collectors.toSet());
-            Collection<Genre> genres = genreStorage.getByIds(genreIds);
-            film.setGenres(genres);
+            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
         }
 
         return films;

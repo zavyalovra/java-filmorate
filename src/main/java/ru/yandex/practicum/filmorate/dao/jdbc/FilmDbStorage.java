@@ -48,7 +48,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             LEFT JOIN mpa m ON f.mpa_id = m.id
             LEFT JOIN film_likes fl ON f.id = fl.film_id
             GROUP BY f.id
-            ORDER BY likes DESC
+            ORDER BY likes DESC, f.id
             LIMIT ?
             """;
 

@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dao.jdbc;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
@@ -41,6 +42,10 @@ public abstract class BaseDbStorage<T> {
         return jdbc.query(query, rowMapper, params);
     }
 
+    protected <T> T queryMany(String query, ResultSetExtractor<T> extractor, Object... params) {
+        return jdbc.query(query, extractor, params);
+    }
+
     protected boolean delete(String query, long id) {
         int rowsDeleted = jdbc.update(query, id);
         return rowsDeleted > 0;
@@ -76,5 +81,18 @@ public abstract class BaseDbStorage<T> {
         } else {
             throw new InternalServerException("Не удалось сохранить данные");
         }
+    }
+
+    protected String placeholder(int size) {
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < size; i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append("?");
+        }
+
+        return sb.toString();
     }
 }

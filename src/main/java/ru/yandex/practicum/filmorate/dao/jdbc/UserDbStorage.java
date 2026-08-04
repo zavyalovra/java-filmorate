@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.dao.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.UserFriendship.Status;
 
@@ -97,6 +98,13 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public void addFriend(Long userId, Long friendId) {
+        if (findById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+        if (findById(friendId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
+        }
+
         Optional<Status> friendshipStatus = getFriendshipStatus(friendId, userId);
 
         if (friendshipStatus.isPresent()) {
@@ -109,6 +117,13 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public void removeFriend(Long userId, Long friendId) {
+        if (findById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+        if (findById(friendId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
+        }
+
         Optional<Status> friendshipStatus = getFriendshipStatus(userId, friendId);
 
         if (friendshipStatus.isPresent() && friendshipStatus.get() == Status.CONFIRMED) {
@@ -121,11 +136,22 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public Collection<User> getFriends(Long userId) {
+        if (findById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+
         return findMany(GET_FRIENDS_QUERY, userId);
     }
 
     @Override
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
+        if (findById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+        if (findById(otherUserId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + otherUserId + " не найден");
+        }
+
         return findMany(GET_COMMON_FRIENDS_QUERY, userId, otherUserId);
     }
 

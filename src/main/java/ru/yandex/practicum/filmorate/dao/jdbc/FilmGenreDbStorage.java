@@ -13,8 +13,9 @@ import java.util.Collection;
 @Repository
 @Qualifier("filmGenreDbStorage")
 public class FilmGenreDbStorage extends BaseDbStorage<FilmGenre> implements FilmGenreStorage {
-    private static final String INSERT_QUERY = "INSERT INTO film_genres(film_id, genre_id)" +
+    private static final String INSERT_QUERY = "MERGE INTO film_genres(film_id, genre_id) KEY (film_id, genre_id)" +
             "VALUES (?, ?)";
+    private static final String FIND_BY_FILM_ID_QUERY = "SELECT * FROM film_genres WHERE film_id = ?";
 
     public FilmGenreDbStorage(JdbcTemplate jdbc, FilmGenreRowMapper mapper) {
         super(jdbc, mapper);
@@ -22,14 +23,13 @@ public class FilmGenreDbStorage extends BaseDbStorage<FilmGenre> implements Film
 
     @Override
     public Collection<FilmGenre> getGenresForFilm(Long filmId) {
-        String findByIdQuery  = "SELECT * FROM film_genres WHERE film_id = ?";
-        return findMany(findByIdQuery, filmId);
+        return findMany(FIND_BY_FILM_ID_QUERY, filmId);
     }
 
     @Override
     public void saveGenresForFilm(Long filmId, Collection<Genre> genres) {
         for (Genre genre : genres) {
-            update(
+            execute(
                     INSERT_QUERY,
                     filmId,
                     genre.getId()
