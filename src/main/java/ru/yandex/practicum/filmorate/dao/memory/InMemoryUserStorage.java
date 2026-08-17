@@ -1,7 +1,9 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.dao.memory;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -9,11 +11,12 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
+@Qualifier("userInMemoryStorage")
 public class InMemoryUserStorage implements UserStorage {
-
     private final Map<Long, User> users = new HashMap<>();
 
     @Override
@@ -22,7 +25,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void create(User user) {
+    public User create(User user) {
         boolean isLoginExists = users.values().stream()
                 .anyMatch(login -> login.getLogin().equals(user.getLogin()));
         if (isLoginExists) {
@@ -45,6 +48,8 @@ public class InMemoryUserStorage implements UserStorage {
 
         log.info("Создание пользователя: {}", user);
         users.put(user.getId(), user);
+
+        return user;
     }
 
     @Override
@@ -96,11 +101,28 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User findUserById(Long id) {
-        if (!users.containsKey(id)) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
-        return users.get(id);
+    public Optional<User> findById(Long id) {
+        return Optional.ofNullable(users.get(id));
+    }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+        throw new NotFoundException("Метод addFriend не поддерживается в InMemoryUserStorage.");
+    }
+
+    @Override
+    public void removeFriend(Long userId, Long friendId) {
+        throw new NotFoundException("Метод removeFriend не поддерживается в InMemoryUserStorage.");
+    }
+
+    @Override
+    public Collection<User> getFriends(Long userId) {
+        throw new NotFoundException("Метод getFriends не поддерживается в InMemoryUserStorage.");
+    }
+
+    @Override
+    public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
+        throw new NotFoundException("Метод getCommonFriends не поддерживается в InMemoryUserStorage.");
     }
 
     private long getNextId() {
