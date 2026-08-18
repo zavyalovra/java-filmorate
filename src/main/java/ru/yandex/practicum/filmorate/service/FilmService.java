@@ -29,6 +29,7 @@ public class FilmService {
     private final FilmGenreStorage filmGenreStorage;
     private final MpaDbStorage mpaDbStorage;
     private final FilmLikesDbStorage filmLikesDbStorage;
+    private final EventService eventService;
 
     @Autowired
     public FilmService(
@@ -37,7 +38,8 @@ public class FilmService {
             @Qualifier("genreDbStorage") GenreStorage genreStorage,
             @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
             @Qualifier("mpaDbStorage") MpaDbStorage mpaDbStorage,
-            @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage) {
+            @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage,
+            EventService eventService) {
 
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
@@ -45,6 +47,7 @@ public class FilmService {
         this.filmGenreStorage = filmGenreStorage;
         this.mpaDbStorage = mpaDbStorage;
         this.filmLikesDbStorage = filmLikesDbStorage;
+        this.eventService = eventService;
     }
 
     public Collection<Film> findAll() {
@@ -130,6 +133,8 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         filmLikesDbStorage.addLike(filmId, userId);
+
+        eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.ADD, filmId);
     }
 
     public void removeRate(Long filmId, Long userId) {
@@ -139,6 +144,8 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         filmLikesDbStorage.removeLike(filmId, userId);
+
+        eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.REMOVE, filmId);
     }
 
     public Collection<Film> getPopularFilms(int count) {
