@@ -3,8 +3,8 @@ package ru.yandex.practicum.filmorate.dao.jdbc;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.dao.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
@@ -51,9 +51,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             ORDER BY likes DESC, f.id
             LIMIT ?
             """;
+    private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
+    }
+
+    @Override
+    public boolean deleteFilm(Long id) {
+        return delete(DELETE_QUERY, id);
     }
 
     @Override

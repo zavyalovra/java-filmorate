@@ -17,6 +17,16 @@ public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
 
     @Override
+    public boolean deleteFilm(Long id) {
+        if (!films.containsKey(id)) {
+            throw new NotFoundException("Фильм с id = " + id + " не найден");
+        }
+        films.remove(id);
+        log.info("Фильм с id = {} удален", id);
+        return true;
+    }
+
+    @Override
     public Collection<Film> get() {
         return films.values();
     }

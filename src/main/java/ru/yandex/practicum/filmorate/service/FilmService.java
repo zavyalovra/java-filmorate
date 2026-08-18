@@ -154,6 +154,12 @@ public class FilmService {
         return films;
     }
 
+    public void deleteFilm(Long filmId) {
+        if (!filmStorage.deleteFilm(filmId)) {
+            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
+        }
+    }
+
     private int getRatingCount(Film film) {
         return film.getRating() != null ? film.getRating().size() : 0;
     }

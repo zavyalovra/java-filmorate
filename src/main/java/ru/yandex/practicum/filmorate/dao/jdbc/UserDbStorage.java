@@ -55,9 +55,15 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             WHERE f1.user_id = ?
               AND f2.user_id = ?
             """;
+    private static final String DELETE_USER_QUERY = "DELETE FROM users WHERE id = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, UserRowMapper mapper) {
         super(jdbc, mapper);
+    }
+
+    @Override
+    public boolean deleteUser(Long userId) {
+        return delete(DELETE_USER_QUERY, userId);
     }
 
     @Override

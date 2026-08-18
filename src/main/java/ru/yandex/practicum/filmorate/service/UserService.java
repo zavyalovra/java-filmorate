@@ -4,11 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 
-import java.util.*;
+import java.util.Collection;
 
 @Slf4j
 @Service
@@ -74,5 +74,12 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + otherUserId + " не найден"));
 
         return userStorage.getCommonFriends(user.getId(), otherUser.getId());
+    }
+
+    public void deleteUser(Long userId) {
+        if (!userStorage.deleteUser(userId)) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+        log.info("Удаление пользователя с id = {}", userId);
     }
 }
