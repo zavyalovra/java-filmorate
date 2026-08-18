@@ -46,4 +46,6 @@ public class Film {
     private Collection<Genre> genres = new ArrayList<>();
 
     private Mpa mpa;
+
+    private Collection<Director> directors = new ArrayList<>();
 }
