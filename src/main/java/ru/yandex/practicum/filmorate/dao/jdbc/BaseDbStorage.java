@@ -95,4 +95,8 @@ public abstract class BaseDbStorage<T> {
 
         return sb.toString();
     }
+
+    protected Integer count(String query, Object... params) {
+        return jdbc.queryForObject(query, Integer.class, params);
+    }
 }
