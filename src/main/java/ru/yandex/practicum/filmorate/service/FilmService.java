@@ -4,21 +4,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.dao.jdbc.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.dao.jdbc.FilmLikesDbStorage;
 import ru.yandex.practicum.filmorate.dao.jdbc.MpaDbStorage;
-import ru.yandex.practicum.filmorate.dao.storage.FilmGenreStorage;
-import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.dao.storage.GenreStorage;
-import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
+import ru.yandex.practicum.filmorate.dao.storage.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.*;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +23,7 @@ public class FilmService {
     private final FilmGenreStorage filmGenreStorage;
     private final MpaDbStorage mpaDbStorage;
     private final FilmLikesDbStorage filmLikesDbStorage;
+    private final DirectorDbStorage directorDbStorage;
 
     @Autowired
     public FilmService(
@@ -37,7 +32,8 @@ public class FilmService {
             @Qualifier("genreDbStorage") GenreStorage genreStorage,
             @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
             @Qualifier("mpaDbStorage") MpaDbStorage mpaDbStorage,
-            @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage) {
+            @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage,
+            @Qualifier("directorDbStorage") DirectorDbStorage directorDbStorage){
 
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
@@ -45,6 +41,7 @@ public class FilmService {
         this.filmGenreStorage = filmGenreStorage;
         this.mpaDbStorage = mpaDbStorage;
         this.filmLikesDbStorage = filmLikesDbStorage;
+        this.directorDbStorage = directorDbStorage;
     }
 
     public Collection<Film> findAll() {
@@ -157,11 +154,47 @@ public class FilmService {
         return films;
     }
 
+
     public void deleteFilm(Long filmId) {
         filmStorage.deleteFilm(filmId);
     }
 
     private int getRatingCount(Film film) {
         return film.getRating() != null ? film.getRating().size() : 0;
+    }
+
+    public Collection<Film> search(String query,String by) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("Параметр query не может быть пустым");
+        }
+        if (by == null || by.isBlank()) {
+            throw new ValidationException("Параметр by не может быть пустым");
+        }
+        ArrayList<String> condition = new ArrayList<>(Arrays.asList(by.split(",")));
+        boolean byTitle = condition.contains("title");
+        boolean byDirector = condition.contains("director");
+
+        if(!byTitle && !byDirector) {
+            throw new ValidationException("Параметр by должен содержать title или director");
+        }
+        Collection<Film> films = filmStorage.search(query, byTitle, byDirector);
+
+        Set<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+
+        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
+
+        Map<Long, Set<Director>> directorsMap = directorDbStorage.getDirectorsForFilms(filmIds);
+
+        for (Film film : films) {
+            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
+        }
+
+        for (Film film : films) {
+            film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
+        }
+
+        return films;
     }
 }

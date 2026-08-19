@@ -57,6 +57,11 @@ public class FilmController {
         return filmService.getPopularFilms(count);
     }
 
+    @GetMapping("/search")
+    public Collection<Film> search(@RequestParam String query, @RequestParam String by) {
+        return filmService.search(query, by);
+    }
+
     @DeleteMapping("/{filmId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteFilm(@PathVariable Long filmId) {

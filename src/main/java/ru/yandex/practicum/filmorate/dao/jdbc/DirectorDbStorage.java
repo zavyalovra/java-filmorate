@@ -18,8 +18,8 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM directors WHERE id = ?";
     private static final String FIND_DIRECTORS_FOR_FILMS = """
             SELECT  fd.film_id,
-                    g.id AS director_id,
-                    g.name AS director_name
+                    d.id AS director_id,
+                    d.name AS director_name
             FROM film_directors fd
             JOIN directors d ON fd.director_id = d.id
             WHERE fd.film_id IN (%s)

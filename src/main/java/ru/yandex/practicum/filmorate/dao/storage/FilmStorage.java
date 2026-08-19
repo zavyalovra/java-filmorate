@@ -16,5 +16,5 @@ public interface FilmStorage {
 
     Collection<Film> getPopular(int count);
 
-    boolean deleteFilm(Long id);
+    Collection<Film> search(String title, boolean byTitle, boolean byDirector);
 }
