@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.storage.ReviewStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Review;
 
 import java.util.Collection;
@@ -16,29 +17,44 @@ public class ReviewService {
     private final ReviewStorage reviewStorage;
     private final FilmService filmService;
     private final UserService userService;
+    private final EventService eventService;
 
     @Autowired
-    public ReviewService(ReviewStorage reviewStorage, FilmService filmService, UserService userService) {
+    public ReviewService(ReviewStorage reviewStorage, FilmService filmService, UserService userService, EventService eventService) {
         this.reviewStorage = reviewStorage;
         this.filmService = filmService;
         this.userService = userService;
+        this.eventService = eventService;
     }
 
     public Review create(Review review) {
         filmService.findFilmById(review.getFilmId());
         userService.findUserById(review.getUserId());
-        return reviewStorage.create(review);
+
+        Review createdReview = reviewStorage.create(review);
+
+        eventService.createEvent(createdReview.getUserId(), Event.EventType.REVIEW, Event.Operation.ADD, createdReview.getReviewId());
+
+        return createdReview;
     }
 
     public Review update(Review review) {
         log.info("Обновляем reviewId = {}", review.getReviewId());
-        findById(review.getReviewId());
+
+        Review oldReview = findById(review.getReviewId());
+        Review updatedReview = reviewStorage.update(review);
+
+        eventService.createEvent(oldReview.getUserId(), Event.EventType.REVIEW, Event.Operation.UPDATE, updatedReview.getReviewId());
+
         filmService.findFilmById(review.getFilmId());
         userService.findUserById(review.getUserId());
-        return reviewStorage.update(review);
+        return updatedReview;
     }
 
     public void delete(Long reviewId) {
+        Review review = findById(reviewId);
+        eventService.createEvent(review.getUserId(), Event.EventType.REVIEW, Event.Operation.REMOVE, reviewId);
+
         reviewStorage.delete(reviewId);
     }
 

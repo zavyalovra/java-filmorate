@@ -58,8 +58,8 @@ CREATE TABLE IF NOT EXISTS reviews (
     user_id BIGINT NOT NULL,
     film_id BIGINT NOT NULL,
     useful BIGINT NOT NULL,
-    CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_reviews_film FOREIGN KEY (film_id) REFERENCES films(id)
+    CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_reviews_film FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS reviews_reaction (
@@ -67,8 +67,8 @@ CREATE TABLE IF NOT EXISTS reviews_reaction (
     user_id BIGINT NOT NULL,
     type_reaction TINYINT NOT NULL,
     PRIMARY KEY (review_id, user_id, type_reaction),
-    CONSTRAINT fk_reviews_reaction_review FOREIGN KEY (review_id) REFERENCES reviews(id),
-    CONSTRAINT fk_reviews_reaction_user FOREIGN KEY (user_id) REFERENCES users(id)
+    CONSTRAINT fk_reviews_reaction_review FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE,
+    CONSTRAINT fk_reviews_reaction_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
 CREATE TABLE IF NOT EXISTS events (
