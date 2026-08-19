@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.dao.jdbc.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.dao.jdbc.FilmLikesDbStorage;
 import ru.yandex.practicum.filmorate.dao.jdbc.MpaDbStorage;
 import ru.yandex.practicum.filmorate.dao.storage.FilmGenreStorage;
@@ -11,12 +12,10 @@ import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.dao.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,6 +28,7 @@ public class FilmService {
     private final FilmGenreStorage filmGenreStorage;
     private final MpaDbStorage mpaDbStorage;
     private final FilmLikesDbStorage filmLikesDbStorage;
+    private final DirectorDbStorage directorDbStorage;
 
     @Autowired
     public FilmService(
@@ -37,7 +37,8 @@ public class FilmService {
             @Qualifier("genreDbStorage") GenreStorage genreStorage,
             @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
             @Qualifier("mpaDbStorage") MpaDbStorage mpaDbStorage,
-            @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage) {
+            @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage,
+            @Qualifier("directorDbStorage") DirectorDbStorage directorDbStorage) {
 
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
@@ -45,6 +46,7 @@ public class FilmService {
         this.filmGenreStorage = filmGenreStorage;
         this.mpaDbStorage = mpaDbStorage;
         this.filmLikesDbStorage = filmLikesDbStorage;
+        this.directorDbStorage = directorDbStorage;
     }
 
     public Collection<Film> findAll() {
@@ -80,9 +82,16 @@ public class FilmService {
             throw new NotFoundException("Один или несколько жанров не существуют");
         }
 
+        Set<Long> directorsIds = film.getDirectors().stream()
+                .map(Director::getId)
+                .collect(Collectors.toSet());
+        Collection<Director> directors = directorDbStorage.getByIds(directorsIds);
+
         film.setGenres(genres);
+        film.setDirectors(directors);
         Film created = filmStorage.create(film);
         filmGenreStorage.saveGenresForFilm(created.getId(), created.getGenres());
+        directorDbStorage.saveDirectorsForFilm(created.getId(), created.getDirectors());
 
         return findFilmById(created.getId());
     }
@@ -106,10 +115,18 @@ public class FilmService {
             throw new NotFoundException("Один или несколько жанров не существуют");
         }
 
+        Set<Long> directorsIds = film.getDirectors().stream()
+                .map(Director::getId)
+                .collect(Collectors.toSet());
+        Collection<Director> directors = directorDbStorage.getByIds(directorsIds);
+
         Film updatedFilm = filmStorage.update(film);
         filmGenreStorage.saveGenresForFilm(updatedFilm.getId(), genres);
+        directorDbStorage.saveDirectorsForFilm(updatedFilm.getId(), directors);
 
         updatedFilm.setGenres(genres);
+        updatedFilm.setDirectors(directors);
+
         return updatedFilm;
     }
 
@@ -163,5 +180,23 @@ public class FilmService {
 
     private int getRatingCount(Film film) {
         return film.getRating() != null ? film.getRating().size() : 0;
+    }
+
+    public Collection<Film> findByDirector(Long directorId, List<FilmSortField> sortBy) {
+        Collection<Film> films = filmStorage.getByDirector(directorId, sortBy);
+
+        Set<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+
+        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
+        Map<Long, Set<Director>> directorsMap = directorDbStorage.getDirectorsForFilms(filmIds);
+
+        for (Film film : films) {
+            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
+            film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
+        }
+
+        return films;
     }
 }

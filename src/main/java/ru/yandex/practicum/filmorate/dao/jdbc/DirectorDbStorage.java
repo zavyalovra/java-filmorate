@@ -18,15 +18,17 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM directors WHERE id = ?";
     private static final String FIND_DIRECTORS_FOR_FILMS = """
             SELECT  fd.film_id,
-                    g.id AS director_id,
-                    g.name AS director_name
+                    d.id AS director_id,
+                    d.name AS director_name
             FROM film_directors fd
             JOIN directors d ON fd.director_id = d.id
             WHERE fd.film_id IN (%s)
             ORDER BY fd.film_id, d.id
             """;
     private static final String FIND_BY_IDS_QUERY = "SELECT * FROM directors WHERE id IN (%s)";
-    private static final String DELETE_BY_ID_QUERY = "DELETE FROM directors WHERE id = ?";
+    private static final String INSERT_DIRECTOR_QUERY = "INSERT INTO directors(name) VALUES (?)";
+    private static final String UPDATE_DIRECTOR_QUERY = "UPDATE directors SET name = ? WHERE id = ?";
+    private static final String DELETE_DIRECTOR_QUERY = "DELETE FROM directors WHERE id = ?";
 
     public DirectorDbStorage(JdbcTemplate jdbc, DirectorRowMapper mapper) {
         super(jdbc, mapper);
@@ -39,7 +41,7 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
 
     @Override
     public Optional<Director> getById(Long id) {
-        return findOne(FIND_BY_ID_QUERY);
+        return findOne(FIND_BY_ID_QUERY, id);
     }
 
     @Override
@@ -78,9 +80,31 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
     }
 
     @Override
-    public void removeDirector(Long directorId) {
+    public Director create(Director director) {
+        long id = insert(
+                INSERT_DIRECTOR_QUERY,
+                director.getName()
+        );
+        director.setId(id);
+
+        return director;
+    }
+
+    @Override
+    public Director update(Director director) {
         update(
-                DELETE_BY_ID_QUERY,
+                UPDATE_DIRECTOR_QUERY,
+                director.getName(),
+                director.getId()
+        );
+
+        return director;
+    }
+
+    @Override
+    public void delete(Long directorId) {
+        execute(
+                DELETE_DIRECTOR_QUERY,
                 directorId
         );
     }
