@@ -7,11 +7,14 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.dao.jdbc.FilmLikesDbStorage;
 import ru.yandex.practicum.filmorate.dao.jdbc.MpaDbStorage;
 import ru.yandex.practicum.filmorate.dao.storage.FilmGenreStorage;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.dao.storage.GenreStorage;
+import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
 import java.util.Map;
@@ -155,9 +158,7 @@ public class FilmService {
     }
 
     public void deleteFilm(Long filmId) {
-        if (!filmStorage.deleteFilm(filmId)) {
-            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
-        }
+        filmStorage.deleteFilm(filmId);
     }
 
     private int getRatingCount(Film film) {
