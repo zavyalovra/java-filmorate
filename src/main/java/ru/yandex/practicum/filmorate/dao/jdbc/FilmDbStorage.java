@@ -78,6 +78,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             ORDER BY likes DESC, f.id
             LIMIT ?
             """;
+
     private static final String GET_BY_DIRECTOR_QUERY = """
             SELECT f.*,
                    m.name AS mpa_name,
@@ -92,6 +93,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             """;
 
     private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
+
     private static final String FIND_BY_IDS_QUERY = """
             SELECT f.id,
                    f.name,
@@ -199,5 +201,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         Object[] params = new Object[by.size()];
         Arrays.fill(params, pattern);
         return findMany(finalQuery, params);
+    }
+
+    @Override
+    public Collection<Film> getByDirector(Long directorId, List<FilmSortField> sortBy) {
+        String orderBy = sortBy.stream()
+                .map(FilmSortField::getSqlField)
+                .collect(Collectors.joining(", "));
+
+        String query = GET_BY_DIRECTOR_QUERY.formatted(orderBy);
+
+        return findMany(query, directorId);
     }
 }
