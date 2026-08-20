@@ -50,7 +50,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             LEFT JOIN directors as d ON d.id = fd.director_id
             LEFT JOIN mpa as m ON f.mpa_id = m.id
             LEFT JOIN film_likes as fl ON fl.film_id = f.id
-            WHERE f.name LIKE ? AND d.name LIKE ?
+            WHERE f.name LIKE ? OR d.name LIKE ?
             GROUP BY f.id
             ORDER BY likes DESC
             """;
