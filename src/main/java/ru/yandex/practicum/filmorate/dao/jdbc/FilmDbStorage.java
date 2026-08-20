@@ -31,7 +31,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             LEFT JOIN directors as d ON d.id = fd.director_id
             LEFT JOIN mpa as m ON f.mpa_id = m.id
             LEFT JOIN film_likes as fl ON fl.film_id = f.id
-            WHERE f.name LIKE ?
+            WHERE LOWER(f.name) LIKE ?
             GROUP BY f.id
             ORDER BY likes DESC
             """;
@@ -50,7 +50,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             LEFT JOIN directors as d ON d.id = fd.director_id
             LEFT JOIN mpa as m ON f.mpa_id = m.id
             LEFT JOIN film_likes as fl ON fl.film_id = f.id
-            WHERE f.name LIKE ? OR d.name LIKE ?
+            WHERE LOWER(f.name) LIKE ? OR LOWER(d.name) LIKE ?
             GROUP BY f.id
             ORDER BY likes DESC
             """;
@@ -69,7 +69,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             LEFT JOIN directors as d ON d.id = fd.director_id
             LEFT JOIN mpa as m ON f.mpa_id = m.id
             LEFT JOIN film_likes as fl ON fl.film_id = f.id
-            WHERE d.name LIKE ?
+            WHERE LOWER(d.name) LIKE ?
             GROUP BY f.id
             ORDER BY likes DESC
             """;
@@ -193,7 +193,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public Collection<Film> search(String query, boolean byTile, boolean byDirector) {
-        String pattern = "%" + query + "%";
+        String pattern = "%" + query.toLowerCase() + "%";
         if(byTile && byDirector) {
             return findMany(SEARCH_BY_TITLE_AND_DIRECTOR, pattern,pattern);
         } else if (byDirector) {

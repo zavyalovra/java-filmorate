@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 @Component
@@ -23,6 +24,7 @@ public class FilmRowMapper implements RowMapper<Film> {
         film.setReleaseDate(resultSet.getDate("release_date").toLocalDate());
         film.setDuration(resultSet.getInt("duration"));
         film.setGenres(new HashSet<>());
+
 
         Mpa mpa = new Mpa();
         mpa.setId(resultSet.getLong("mpa_id"));

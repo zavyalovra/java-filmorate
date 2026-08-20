@@ -58,9 +58,11 @@ public class FilmService {
                 .collect(Collectors.toSet());
 
         Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
+        Map<Long, Set<Director>> directorsMap = directorDbStorage.getDirectorsForFilms(filmIds);
 
         for (Film film : films) {
             film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
+            film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
         }
 
         return films;
@@ -136,7 +138,9 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
 
         Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(Set.of(film.getId()));
+        Map<Long, Set<Director>> directorsMap = directorDbStorage.getDirectorsForFilms(Set.of(film.getId()));
         film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
+       // film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
 
         return film;
     }
