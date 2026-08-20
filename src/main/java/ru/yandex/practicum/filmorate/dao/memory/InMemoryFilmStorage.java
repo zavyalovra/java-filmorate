@@ -76,6 +76,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         throw new NotFoundException("Метод getPopular не поддерживается в InMemoryFilmStorage");
     }
 
+    @Override
+    public Collection<Film> getByIds(Set<Long> genresIds) {
+        throw new NotFoundException("Метод getByIds не поддерживается в InMemoryFilmStorage");
+    }
+
     private long getNextId() {
         long currentMaxId = films.keySet()
                 .stream()
