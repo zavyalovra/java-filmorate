@@ -7,12 +7,17 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.dao.jdbc.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.dao.jdbc.FilmLikesDbStorage;
 import ru.yandex.practicum.filmorate.dao.jdbc.MpaDbStorage;
-import ru.yandex.practicum.filmorate.dao.storage.*;
+import ru.yandex.practicum.filmorate.dao.storage.FilmGenreStorage;
+import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.dao.storage.GenreStorage;
+import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +28,7 @@ public class FilmService {
     private final FilmGenreStorage filmGenreStorage;
     private final MpaDbStorage mpaDbStorage;
     private final FilmLikesDbStorage filmLikesDbStorage;
+    private final EventService eventService;
     private final DirectorDbStorage directorDbStorage;
 
     @Autowired
@@ -33,7 +39,8 @@ public class FilmService {
             @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
             @Qualifier("mpaDbStorage") MpaDbStorage mpaDbStorage,
             @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage,
-            @Qualifier("directorDbStorage") DirectorDbStorage directorDbStorage) {
+            @Qualifier("directorDbStorage") DirectorDbStorage directorDbStorage,
+            EventService eventService) {
 
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
@@ -42,6 +49,7 @@ public class FilmService {
         this.mpaDbStorage = mpaDbStorage;
         this.filmLikesDbStorage = filmLikesDbStorage;
         this.directorDbStorage = directorDbStorage;
+        this.eventService = eventService;
     }
 
     public Collection<Film> findAll() {
@@ -77,9 +85,16 @@ public class FilmService {
             throw new NotFoundException("Один или несколько жанров не существуют");
         }
 
+        Set<Long> directorsIds = film.getDirectors().stream()
+                .map(Director::getId)
+                .collect(Collectors.toSet());
+        Collection<Director> directors = directorDbStorage.getByIds(directorsIds);
+
         film.setGenres(genres);
+        film.setDirectors(directors);
         Film created = filmStorage.create(film);
         filmGenreStorage.saveGenresForFilm(created.getId(), created.getGenres());
+        directorDbStorage.saveDirectorsForFilm(created.getId(), created.getDirectors());
 
         return findFilmById(created.getId());
     }
@@ -103,10 +118,18 @@ public class FilmService {
             throw new NotFoundException("Один или несколько жанров не существуют");
         }
 
+        Set<Long> directorsIds = film.getDirectors().stream()
+                .map(Director::getId)
+                .collect(Collectors.toSet());
+        Collection<Director> directors = directorDbStorage.getByIds(directorsIds);
+
         Film updatedFilm = filmStorage.update(film);
         filmGenreStorage.saveGenresForFilm(updatedFilm.getId(), genres);
+        directorDbStorage.saveDirectorsForFilm(updatedFilm.getId(), directors);
 
         updatedFilm.setGenres(genres);
+        updatedFilm.setDirectors(directors);
+
         return updatedFilm;
     }
 
@@ -127,6 +150,8 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         filmLikesDbStorage.addLike(filmId, userId);
+
+        eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.ADD, filmId);
     }
 
     public void removeRate(Long filmId, Long userId) {
@@ -136,6 +161,8 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         filmLikesDbStorage.removeLike(filmId, userId);
+
+        eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.REMOVE, filmId);
     }
 
     public Collection<Film> getPopularFilms(int count) {
@@ -153,7 +180,6 @@ public class FilmService {
 
         return films;
     }
-
 
     public void deleteFilm(Long filmId) {
         filmStorage.deleteFilm(filmId);
@@ -185,6 +211,24 @@ public class FilmService {
 
         Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
 
+        Map<Long, Set<Director>> directorsMap = directorDbStorage.getDirectorsForFilms(filmIds);
+
+        for (Film film : films) {
+            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
+            film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
+        }
+
+        return films;
+    }
+
+    public Collection<Film> findByDirector(Long directorId, List<FilmSortField> sortBy) {
+        Collection<Film> films = filmStorage.getByDirector(directorId, sortBy);
+
+        Set<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+
+        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
         Map<Long, Set<Director>> directorsMap = directorDbStorage.getDirectorsForFilms(filmIds);
 
         for (Film film : films) {

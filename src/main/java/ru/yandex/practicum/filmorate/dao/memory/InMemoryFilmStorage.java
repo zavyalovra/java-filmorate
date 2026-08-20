@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmSortField;
 
 import java.util.*;
 
@@ -24,6 +25,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         films.remove(id);
         log.info("Фильм с id = {} удален", id);
         return true;
+    }
+
+    @Override
+    public Collection<Film> getByDirector(Long directorId, List<FilmSortField> sortBy) {
+        throw new NotFoundException("Метод getByDirector не поддерживается в InMemoryFilmStorage");
     }
 
     @Override

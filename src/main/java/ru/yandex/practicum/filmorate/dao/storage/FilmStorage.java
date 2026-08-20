@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.dao.storage;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmSortField;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface FilmStorage {
@@ -16,7 +18,9 @@ public interface FilmStorage {
 
     Collection<Film> getPopular(int count);
 
+    boolean deleteFilm(Long id);
+
+    Collection<Film> getByDirector(Long directorId, List<FilmSortField> sortBy);
     Collection<Film> search(String title, boolean byTitle, boolean byDirector);
 
-    public boolean deleteFilm(Long id);
 }

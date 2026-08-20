@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
@@ -14,12 +15,15 @@ import java.util.Collection;
 @Service
 public class UserService {
     private final UserStorage userStorage;
+    private final EventService eventService;
 
     @Autowired
     public UserService(
-            @Qualifier("userDbStorage") UserStorage userStorage) {
+            @Qualifier("userDbStorage") UserStorage userStorage,
+            EventService eventService) {
 
         this.userStorage = userStorage;
+        this.eventService = eventService;
     }
 
     public Collection<User> findAll() {
@@ -48,6 +52,8 @@ public class UserService {
 
         log.info("Отправляем запрос от userId = {} на добавление в друзья friendId = {}", userId, friendId);
         userStorage.addFriend(user.getId(), friend.getId());
+
+        eventService.createEvent(userId, Event.EventType.FRIEND, Event.Operation.ADD, friendId);
     }
 
     public void removeFriend(Long userId, Long friendId) {
@@ -58,6 +64,8 @@ public class UserService {
 
         log.info("Удаление заявки userId = {} на добавление в друзья friendId = {}", userId, friendId);
         userStorage.removeFriend(user.getId(), friend.getId());
+
+        eventService.createEvent(userId, Event.EventType.FRIEND, Event.Operation.REMOVE, friendId);
     }
 
     public Collection<User> getFriends(Long userId) {
