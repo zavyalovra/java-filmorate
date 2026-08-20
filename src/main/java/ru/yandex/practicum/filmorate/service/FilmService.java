@@ -33,7 +33,7 @@ public class FilmService {
             @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
             @Qualifier("mpaDbStorage") MpaDbStorage mpaDbStorage,
             @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage,
-            @Qualifier("directorDbStorage") DirectorDbStorage directorDbStorage){
+            @Qualifier("directorDbStorage") DirectorDbStorage directorDbStorage) {
 
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
@@ -163,18 +163,18 @@ public class FilmService {
         return film.getRating() != null ? film.getRating().size() : 0;
     }
 
-    public Collection<Film> search(String query,String by) {
-        if (query == null || query.isBlank()) {
+    public Collection<Film> search(String query, String by) {
+        if (query.isBlank()) {
             throw new ValidationException("Параметр query не может быть пустым");
         }
-        if (by == null || by.isBlank()) {
+        if (by.isBlank()) {
             throw new ValidationException("Параметр by не может быть пустым");
         }
         ArrayList<String> condition = new ArrayList<>(Arrays.asList(by.split(",")));
         boolean byTitle = condition.contains("title");
         boolean byDirector = condition.contains("director");
 
-        if(!byTitle && !byDirector) {
+        if (!byTitle && !byDirector) {
             throw new ValidationException("Параметр by должен содержать title или director");
         }
         Collection<Film> films = filmStorage.search(query, byTitle, byDirector);
@@ -189,9 +189,6 @@ public class FilmService {
 
         for (Film film : films) {
             film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
-        }
-
-        for (Film film : films) {
             film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
         }
 
