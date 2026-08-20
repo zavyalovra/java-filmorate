@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.FilmSortField;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -60,8 +61,8 @@ public class FilmController {
     }
 
     @GetMapping("/search")
-    public Collection<Film> search(@RequestParam String query, @RequestParam String by) {
-        return filmService.search(query, by);
+    public Collection<Film> search(@RequestParam HashMap<String,String> by) {
+        return filmService.search(by);
     }
 
     @DeleteMapping("/{filmId}")

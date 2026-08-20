@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmSortField;
 
@@ -182,10 +181,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             return findMany(SEARCH_BY_TITLE_AND_DIRECTOR, pattern, pattern);
         } else if (byDirector) {
             return findMany(SEARCH_BY_DIRECTOR, pattern);
-        } else if (byTile) {
-            return findMany(SEARCH_BY_TITLE, pattern);
         } else {
-            throw new ValidationException("Параметр by должен содержать title или director");
+            return findMany(SEARCH_BY_TITLE, pattern);
         }
+
+
+
     }
 }

@@ -45,17 +45,7 @@ public class FilmService {
     public Collection<Film> findAll() {
         Collection<Film> films = filmStorage.get();
 
-        Set<Long> filmIds = films.stream().map(Film::getId).collect(Collectors.toSet());
-
-        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
-        Map<Long, Set<Director>> directorsMap = directorDbStorage.getDirectorsForFilms(filmIds);
-
-        for (Film film : films) {
-            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
-            film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
-        }
-
-        return films;
+        return addFilmDetails(films);
     }
 
     @Transactional
@@ -144,15 +134,7 @@ public class FilmService {
     public Collection<Film> getPopularFilms(int count) {
         Collection<Film> films = filmStorage.getPopular(count);
 
-        Set<Long> filmIds = films.stream().map(Film::getId).collect(Collectors.toSet());
-
-        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
-
-        for (Film film : films) {
-            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
-        }
-
-        return films;
+        return addFilmDetails(films);
     }
 
     public void deleteFilm(Long filmId) {
@@ -163,14 +145,16 @@ public class FilmService {
         return film.getRating() != null ? film.getRating().size() : 0;
     }
 
-    public Collection<Film> search(String query, String by) {
+    public Collection<Film> search(HashMap<String,String> by) {
+        String query = by.get("query");
+        String titleOrAndDirector = by.get("by");
         if (query.isBlank()) {
             throw new ValidationException("Параметр query не может быть пустым");
         }
-        if (by.isBlank()) {
-            throw new ValidationException("Параметр by не может быть пустым");
+        if (titleOrAndDirector.isBlank()) {
+            throw new ValidationException("Параметр titleOrAndDirector не может быть пустым");
         }
-        ArrayList<String> condition = new ArrayList<>(Arrays.asList(by.split(",")));
+        ArrayList<String> condition = new ArrayList<>(Arrays.asList(titleOrAndDirector.split(",")));
         boolean byTitle = condition.contains("title");
         boolean byDirector = condition.contains("director");
 
@@ -179,23 +163,16 @@ public class FilmService {
         }
         Collection<Film> films = filmStorage.search(query, byTitle, byDirector);
 
-        Set<Long> filmIds = films.stream().map(Film::getId).collect(Collectors.toSet());
-
-        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
-
-        Map<Long, Set<Director>> directorsMap = directorDbStorage.getDirectorsForFilms(filmIds);
-
-        for (Film film : films) {
-            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
-            film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
-        }
-
-        return films;
+        return addFilmDetails(films);
     }
 
     public Collection<Film> findByDirector(Long directorId, List<FilmSortField> sortBy) {
         Collection<Film> films = filmStorage.getByDirector(directorId, sortBy);
 
+        return addFilmDetails(films);
+    }
+
+    private Collection<Film> addFilmDetails(Collection<Film> films) {
         Set<Long> filmIds = films.stream().map(Film::getId).collect(Collectors.toSet());
 
         Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
