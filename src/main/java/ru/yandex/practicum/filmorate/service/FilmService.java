@@ -160,6 +160,31 @@ public class FilmService {
         filmStorage.deleteFilm(filmId);
     }
 
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+        userStorage.findById(friendId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
+
+        Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId);
+
+        Set<Long> filmIds = commonFilms.stream()
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+
+        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
+        Map<Long, Set<Director>> directorsMap = directorDbStorage.getDirectorsForFilms(filmIds);
+
+        for (Film film : commonFilms) {
+            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
+            film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
+        }
+
+        return commonFilms.stream()
+                .sorted((f1, f2) -> Integer.compare(getRatingCount(f2), getRatingCount(f1)))
+                .collect(Collectors.toList());
+    }
+
     private int getRatingCount(Film film) {
         return film.getRating() != null ? film.getRating().size() : 0;
     }

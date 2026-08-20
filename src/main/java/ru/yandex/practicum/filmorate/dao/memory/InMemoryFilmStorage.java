@@ -19,6 +19,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
 
     @Override
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        throw new NotFoundException("Метод getCommonFilms не поддерживается в InMemoryFilmStorage");
+    }
+
+    @Override
     public boolean deleteFilm(Long id) {
         if (!films.containsKey(id)) {
             throw new NotFoundException("Фильм с id = " + id + " не найден");

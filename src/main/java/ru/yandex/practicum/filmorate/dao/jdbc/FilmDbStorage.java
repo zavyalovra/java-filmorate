@@ -93,6 +93,19 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             """;
 
     private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
+    private static final String GET_COMMON_FILMS_QUERY = """
+            SELECT f.*,
+                   m.name AS mpa_name
+            FROM films f
+            LEFT JOIN film_directors fd ON f.id = fd.film_id
+            LEFT JOIN mpa m ON f.mpa_id = m.id
+            WHERE f.id IN (
+                SELECT fl1.film_id
+                FROM film_likes fl1
+                JOIN film_likes fl2 ON fl1.film_id = fl2.film_id
+                WHERE fl1.user_id = ? AND fl2.user_id = ?
+            )
+            """;
 
     private static final String FIND_BY_IDS_QUERY = """
             SELECT f.id,
@@ -109,6 +122,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
+    }
+
+    @Override
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        return findMany(GET_COMMON_FILMS_QUERY, userId, friendId);
     }
 
     @Override

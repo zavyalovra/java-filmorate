@@ -24,6 +24,8 @@ public interface FilmStorage {
 
     Collection<Film> getByDirector(Long directorId, List<FilmSortField> sortBy);
 
+    Collection<Film> getCommonFilms(Long userId, Long friendId);
+
     Collection<Film> getByIds(Set<Long> genresIds);
 
     Collection<Film> search(String query, List<FilmByField> by);
