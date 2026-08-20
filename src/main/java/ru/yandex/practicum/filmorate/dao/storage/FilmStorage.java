@@ -21,4 +21,7 @@ public interface FilmStorage {
     boolean deleteFilm(Long id);
 
     Collection<Film> getByDirector(Long directorId, List<FilmSortField> sortBy);
+
+    Collection<Film> search(String title, boolean byTitle, boolean byDirector);
+
 }
