@@ -6,9 +6,12 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmSortField;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @Qualifier("filmDbStorage")
@@ -51,6 +54,19 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             ORDER BY likes DESC, f.id
             LIMIT ?
             """;
+    private static final String GET_BY_DIRECTOR_QUERY = """
+            SELECT f.*,
+                   m.name AS mpa_name,
+                   COUNT(fl.user_id) AS likes
+            FROM films f
+            LEFT JOIN film_directors fd ON f.id = fd.film_id
+            LEFT JOIN mpa m ON f.mpa_id = m.id
+            LEFT JOIN film_likes fl ON f.id = fl.film_id
+            WHERE fd.director_id = ?
+            GROUP BY f.id
+            ORDER BY %s
+            """;
+
     private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
@@ -103,5 +119,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     public Collection<Film> getPopular(int count) {
         return findMany(GET_POPULAR_QUERY, count);
+    }
+
+    @Override
+    public Collection<Film> getByDirector(Long directorId, List<FilmSortField> sortBy) {
+        String orderBy = sortBy.stream()
+                .map(FilmSortField::getSqlField)
+                .collect(Collectors.joining(", "));
+
+        String query = GET_BY_DIRECTOR_QUERY.formatted(orderBy);
+
+        return findMany(query, directorId);
     }
 }
