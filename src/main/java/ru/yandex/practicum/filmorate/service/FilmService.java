@@ -30,7 +30,15 @@ public class FilmService {
     private final DirectorDbStorage directorDbStorage;
 
     @Autowired
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, @Qualifier("userDbStorage") UserStorage userStorage, @Qualifier("genreDbStorage") GenreStorage genreStorage, @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage, @Qualifier("mpaDbStorage") MpaDbStorage mpaDbStorage, @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage, @Qualifier("directorDbStorage") DirectorDbStorage directorDbStorage, EventService eventService) {
+    public FilmService(
+            @Qualifier("filmDbStorage") FilmStorage filmStorage,
+            @Qualifier("userDbStorage") UserStorage userStorage,
+            @Qualifier("genreDbStorage") GenreStorage genreStorage,
+            @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
+            @Qualifier("mpaDbStorage") MpaDbStorage mpaDbStorage,
+            @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage,
+            @Qualifier("directorDbStorage") DirectorDbStorage directorDbStorage,
+            EventService eventService) {
 
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
@@ -51,7 +59,8 @@ public class FilmService {
     @Transactional
     public Film create(Film film) {
         if (film.getMpa() != null) {
-            Mpa mpa = mpaDbStorage.getById(film.getMpa().getId()).orElseThrow(() -> new NotFoundException("Рейтинг с id = " + film.getMpa().getId() + " не найден"));
+            Mpa mpa = mpaDbStorage.getById(film.getMpa().getId())
+                    .orElseThrow(() -> new NotFoundException("Рейтинг с id = " + film.getMpa().getId() + " не найден"));
             film.setMpa(mpa);
         }
 
@@ -76,10 +85,12 @@ public class FilmService {
 
     @Transactional
     public Film update(Film film) {
-        filmStorage.findById(film.getId()).orElseThrow(() -> new NotFoundException("Фильм с id = " + film.getId() + " не найден"));
+        filmStorage.findById(film.getId())
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + film.getId() + " не найден"));
 
         if (film.getMpa() != null) {
-            Mpa mpa = mpaDbStorage.getById(film.getMpa().getId()).orElseThrow(() -> new NotFoundException("Рейтинг с id = " + film.getMpa().getId() + " не найден"));
+            Mpa mpa = mpaDbStorage.getById(film.getMpa().getId())
+                    .orElseThrow(() -> new NotFoundException("Рейтинг с id = " + film.getMpa().getId() + " не найден"));
             film.setMpa(mpa);
         }
 
@@ -103,7 +114,8 @@ public class FilmService {
     }
 
     public Film findFilmById(Long id) {
-        Film film = filmStorage.findById(id).orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
+        Film film = filmStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
 
         Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(Set.of(film.getId()));
         Map<Long, Set<Director>> directorsMap = directorDbStorage.getDirectorsForFilms(Set.of(film.getId()));
@@ -114,8 +126,10 @@ public class FilmService {
     }
 
     public void addRate(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
-        User user = userStorage.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+        Film film = filmStorage.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        User user = userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         filmLikesDbStorage.addLike(filmId, userId);
 
@@ -123,8 +137,10 @@ public class FilmService {
     }
 
     public void removeRate(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
-        User user = userStorage.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+        Film film = filmStorage.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        User user = userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
 
         filmLikesDbStorage.removeLike(filmId, userId);
 
