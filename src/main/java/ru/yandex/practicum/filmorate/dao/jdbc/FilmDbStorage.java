@@ -68,7 +68,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String GET_POPULAR_QUERY = """
             SELECT f.*,
                    m.name AS mpa_name,
-                   COUNT(fl.user_id) AS likes
+                   COUNT(DISTINCT fl.user_id) AS likes
             FROM films f
             LEFT JOIN mpa m ON f.mpa_id = m.id
             LEFT JOIN film_likes fl ON f.id = fl.film_id
