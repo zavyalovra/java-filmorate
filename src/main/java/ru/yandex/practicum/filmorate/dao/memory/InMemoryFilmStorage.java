@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmSortField;
+import ru.yandex.practicum.filmorate.model.FilmByField;
 
 import java.util.*;
 
@@ -79,6 +80,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Collection<Film> getByIds(Set<Long> genresIds) {
         throw new NotFoundException("Метод getByIds не поддерживается в InMemoryFilmStorage");
+    }
+
+    @Override
+    public Collection<Film> search(String query, List<FilmByField> by) {
+        throw new NotFoundException("Метод search не поддерживается в InMemoryFilmStorage");
     }
 
     private long getNextId() {
