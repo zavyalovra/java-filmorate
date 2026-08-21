@@ -145,23 +145,15 @@ public class FilmService {
         return film.getRating() != null ? film.getRating().size() : 0;
     }
 
-    public Collection<Film> search(HashMap<String,String> by) {
-        String query = by.get("query");
-        String titleOrAndDirector = by.get("by");
+    public Collection<Film> search(String query,List<FilmByField> by) {
         if (query.isBlank()) {
             throw new ValidationException("Параметр query не может быть пустым");
         }
-        if (titleOrAndDirector.isBlank()) {
-            throw new ValidationException("Параметр titleOrAndDirector не может быть пустым");
+        if (by.isEmpty()) {
+            throw new ValidationException("Параметр by не может быть пустым");
         }
-        ArrayList<String> condition = new ArrayList<>(Arrays.asList(titleOrAndDirector.split(",")));
-        boolean byTitle = condition.contains("title");
-        boolean byDirector = condition.contains("director");
 
-        if (!byTitle && !byDirector) {
-            throw new ValidationException("Параметр by должен содержать title или director");
-        }
-        Collection<Film> films = filmStorage.search(query, byTitle, byDirector);
+        Collection<Film> films = filmStorage.search(query, by);
 
         return addFilmDetails(films);
     }

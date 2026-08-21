@@ -5,11 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmByField;
 import ru.yandex.practicum.filmorate.model.FilmSortField;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -61,8 +61,8 @@ public class FilmController {
     }
 
     @GetMapping("/search")
-    public Collection<Film> search(@RequestParam HashMap<String,String> by) {
-        return filmService.search(by);
+    public Collection<Film> search(@RequestParam String query,@RequestParam List<FilmByField> by) {
+        return filmService.search(query,by);
     }
 
     @DeleteMapping("/{filmId}")

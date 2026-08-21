@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dao.storage;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmByField;
 import ru.yandex.practicum.filmorate.model.FilmSortField;
 
 import java.util.Collection;
@@ -22,6 +23,6 @@ public interface FilmStorage {
 
     Collection<Film> getByDirector(Long directorId, List<FilmSortField> sortBy);
 
-    Collection<Film> search(String title, boolean byTitle, boolean byDirector);
+    Collection<Film> search(String query, List<FilmByField> by);
 
 }

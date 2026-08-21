@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmByField;
 import ru.yandex.practicum.filmorate.model.FilmSortField;
 
 import java.util.*;
@@ -77,7 +78,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> search(String query, boolean byTitle, boolean byDirector) {
+    public Collection<Film> search(String query, List<FilmByField> by) {
         throw new NotFoundException("Метод search не поддерживается в InMemoryFilmStorage");
     }
 
