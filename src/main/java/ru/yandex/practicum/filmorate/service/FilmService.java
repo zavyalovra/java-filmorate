@@ -147,8 +147,11 @@ public class FilmService {
         eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.REMOVE, filmId);
     }
 
-    public Collection<Film> getPopularFilms(int count) {
-        Collection<Film> films = filmStorage.getPopular(count);
+    public Collection<Film> getPopularFilms(int count, Long genreID, Integer year) {
+        if (year != null && year < 1895) {
+            throw new ValidationException("Год не может быть раньше 1895");
+        }
+        Collection<Film> films = filmStorage.getPopular(count,genreID, year);
 
         return addFilmDetails(films);
     }

@@ -73,7 +73,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getPopular(int count) {
+    public Collection<Film> getPopular(int count, Long genreId, Integer year) {
         throw new NotFoundException("Метод getPopular не поддерживается в InMemoryFilmStorage");
     }
 

@@ -9,11 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmByField;
 import ru.yandex.practicum.filmorate.model.FilmSortField;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -76,6 +72,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             FROM films f
             LEFT JOIN mpa m ON f.mpa_id = m.id
             LEFT JOIN film_likes fl ON f.id = fl.film_id
+            LEFT JOIN film_genres as fg ON fg.film_id = f.id
+            WHERE %s
             GROUP BY f.id
             ORDER BY likes DESC, f.id
             LIMIT ?
@@ -155,8 +153,24 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return findOne(FIND_BY_ID_QUERY, id);
     }
 
-    public Collection<Film> getPopular(int count) {
-        return findMany(GET_POPULAR_QUERY, count);
+    @Override
+    public Collection<Film> getPopular(int count, Long genreId, Integer year) {
+        List<String> condition = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+
+        if (genreId != null) {
+            condition.add("fg.genre_id = ?");
+            params.add(genreId);
+        }
+        if (year != null) {
+            condition.add("EXTRACT(YEAR FROM f.release_date) = ?");
+            params.add(year);
+        }
+        params.add(count);
+        //"5=5" так как форматирование требует чтобы это не было пустым
+        String where = condition.isEmpty() ? "5=5" : String.join(" AND ", condition);
+        String finalQuery = GET_POPULAR_QUERY.formatted(where);
+        return findMany(finalQuery,params.toArray());
     }
 
     @Override
@@ -178,7 +192,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public Collection<Film> search(String query, List<FilmByField> by) {
         String pattern = "%" + query.toLowerCase() + "%";
-        String byDirectorAndOrTitle = by.stream().map(FilmByField::getSqlField).collect(Collectors.joining(" OR "));
+        String byDirectorAndOrTitle = by.stream()
+                .map(FilmByField::getSqlField)
+                .collect(Collectors.joining(" OR "));
         String finalQuery = SEARCH_BY.formatted(byDirectorAndOrTitle);
         Object[] params = new Object[by.size()];
         Arrays.fill(params, pattern);

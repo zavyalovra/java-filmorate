@@ -18,7 +18,7 @@ public interface FilmStorage {
 
     Optional<Film> findById(Long id);
 
-    Collection<Film> getPopular(int count);
+    public Collection<Film> getPopular(int count, Long genreId, Integer year);
 
     boolean deleteFilm(Long id);
 
