@@ -37,109 +37,6 @@ public class UserService {
         this.filmStorage = filmStorage;
     }
 
-    public Collection<User> findAll() {
-        return userStorage.get();
-    }
-
-    public User create(User user) {
-        return userStorage.create(user);
-    }
-
-    public User update(User user) {
-        findUserById(user.getId());
-        return userStorage.update(user);
-    }
-
-    public User findUserById(Long id) {
-        return userStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не найден"));
-    }
-
-    public void addFriend(Long userId, Long friendId) {
-        User user = userStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
-        User friend = userStorage.findById(friendId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
-
-        log.info("Отправляем запрос от userId = {} на добавление в друзья friendId = {}", userId, friendId);
-        userStorage.addFriend(user.getId(), friend.getId());
-
-        eventService.createEvent(userId, Event.EventType.FRIEND, Event.Operation.ADD, friendId);
-    }
-
-    public void removeFriend(Long userId, Long friendId) {
-        User user = userStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
-        User friend = userStorage.findById(friendId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
-
-        log.info("Удаление заявки userId = {} на добавление в друзья friendId = {}", userId, friendId);
-        userStorage.removeFriend(user.getId(), friend.getId());
-
-        eventService.createEvent(userId, Event.EventType.FRIEND, Event.Operation.REMOVE, friendId);
-    }
-
-    public Collection<User> getFriends(Long userId) {
-        User user = userStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
-
-        return userStorage.getFriends(user.getId());
-    }
-
-    public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
-        User user = userStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
-        User otherUser = userStorage.findById(otherUserId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + otherUserId + " не найден"));
-
-        return userStorage.getCommonFriends(user.getId(), otherUser.getId());
-    }
-
-    public void deleteUser(Long userId) {
-        userStorage.deleteUser(userId);
-        log.info("Удаление пользователя с id = {}", userId);
-    }
-
-    public Collection<Film> getRecommendations(Long userId) {
-        log.info("Поиск рекомендация по фильмам для userId = {} ", userId);
-        Collection<Film> recommendedFilms = new ArrayList<>();
-        Collection<FilmLike> likes = filmLikesStorage.get();
-        if (likes.isEmpty()) {  //нет лайков - сразу уходим
-            return recommendedFilms;
-        }
-        //забираем уникальный набор пользователей - в списках лайках может быть дублирование
-        Set<Long> users = likes.stream().map(FilmLike::getUserId).collect(Collectors.toSet());
-        if (!users.contains(userId) || users.size() == 1) { //наш клиент ничего не лайкал или лайкал только он - на выход
-            return recommendedFilms;
-        }
-        //забираем уникальный набор фильмов - в списках лайках может быть дублирование
-        Set<Long> films = likes.stream().map(FilmLike::getFilmId).collect(Collectors.toSet());
-        //набираем мапу существующих лайков
-        Map<Long, Set<Long>> likesMap = getLikesMap(likes);
-        //набираем матрицу все пользователи-все фильмы-оценки
-        Map<Long, HashMap<Long, Integer>> rates = getRates(likesMap, films);
-        //Забираем данные нашего пользователя и убираем из общего расчета
-        HashMap<Long, Integer> ourUserRates = rates.get(userId);
-        rates.remove(userId);
-        //посчитаем для него сразу длину (евклидову норму)
-        double ourUserLength = calcLength(ourUserRates.values());
-        //считаем косинусное сходство для каждого пользователя в сравнении с нашим пользователем
-        Map<Long, Double> cosineSimilarity = getCosineSimilarity(rates, ourUserRates, ourUserLength);
-        //ищем самого похожего пользователя
-        Long alterUserId = getSimilarUserId(cosineSimilarity);
-        if (alterUserId != null) {  //есть такой пользователь
-            //набираем id фильмов которые ЕСТЬ у второго пользователя и НЕТ у нашего пользователя
-            Set<Long> notMatchedIds = likesMap.get(alterUserId)
-                    .stream()
-                    .filter(id -> !likesMap.get(userId).contains(id))
-                    .collect(Collectors.toSet());
-            if (!notMatchedIds.isEmpty()) {  //есть хоть что-то что можем рекомендовать
-                recommendedFilms = filmStorage.getByIds(notMatchedIds);
-            }
-        }
-        return recommendedFilms;
-    }
-
     private static Long getSimilarUserId(Map<Long, Double> cosineSimilarity) {
         log.info("Поиск похожего пользователя");
         Long alterUserId = null;
@@ -216,5 +113,101 @@ public class UserService {
         }
         ourUserLength = Math.sqrt(ourUserLength);
         return ourUserLength;
+    }
+
+    public Collection<User> findAll() {
+        return userStorage.get();
+    }
+
+    public User create(User user) {
+        return userStorage.create(user);
+    }
+
+    public User update(User user) {
+        findUserById(user.getId());
+        return userStorage.update(user);
+    }
+
+    public User findUserById(Long id) {
+        return userStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не найден"));
+    }
+
+    public void addFriend(Long userId, Long friendId) {
+        User user = findUserById(userId);
+        User friend = findUserById(friendId);
+
+        log.info("Отправляем запрос от userId = {} на добавление в друзья friendId = {}", userId, friendId);
+        userStorage.addFriend(user.getId(), friend.getId());
+
+        eventService.createEvent(userId, Event.EventType.FRIEND, Event.Operation.ADD, friendId);
+    }
+
+    public void removeFriend(Long userId, Long friendId) {
+        User user = findUserById(userId);
+        User friend = findUserById(friendId);
+
+        log.info("Удаление заявки userId = {} на добавление в друзья friendId = {}", userId, friendId);
+        userStorage.removeFriend(user.getId(), friend.getId());
+
+        eventService.createEvent(userId, Event.EventType.FRIEND, Event.Operation.REMOVE, friendId);
+    }
+
+    public Collection<User> getFriends(Long userId) {
+        User user = findUserById(userId);
+
+        return userStorage.getFriends(user.getId());
+    }
+
+    public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
+        User user = findUserById(userId);
+        User otherUser = findUserById(otherUserId);
+
+        return userStorage.getCommonFriends(user.getId(), otherUser.getId());
+    }
+
+    public void deleteUser(Long userId) {
+        userStorage.deleteUser(userId);
+        log.info("Удаление пользователя с id = {}", userId);
+    }
+
+    public Collection<Film> getRecommendations(Long userId) {
+        log.info("Поиск рекомендация по фильмам для userId = {} ", userId);
+        Collection<Film> recommendedFilms = new ArrayList<>();
+        Collection<FilmLike> likes = filmLikesStorage.get();
+        if (likes.isEmpty()) {  //нет лайков - сразу уходим
+            return recommendedFilms;
+        }
+        //забираем уникальный набор пользователей - в списках лайках может быть дублирование
+        Set<Long> users = likes.stream().map(FilmLike::getUserId).collect(Collectors.toSet());
+        if (!users.contains(userId) || users.size() == 1) { //наш клиент ничего не лайкал или лайкал только он - на выход
+            return recommendedFilms;
+        }
+        //забираем уникальный набор фильмов - в списках лайках может быть дублирование
+        Set<Long> films = likes.stream().map(FilmLike::getFilmId).collect(Collectors.toSet());
+        //набираем мапу существующих лайков
+        Map<Long, Set<Long>> likesMap = getLikesMap(likes);
+        //набираем матрицу все пользователи-все фильмы-оценки
+        Map<Long, HashMap<Long, Integer>> rates = getRates(likesMap, films);
+        //Забираем данные нашего пользователя и убираем из общего расчета
+        HashMap<Long, Integer> ourUserRates = rates.get(userId);
+        rates.remove(userId);
+        //посчитаем для него сразу длину (евклидову норму)
+        double ourUserLength = calcLength(ourUserRates.values());
+        //считаем косинусное сходство для каждого пользователя в сравнении с нашим пользователем
+        Map<Long, Double> cosineSimilarity = getCosineSimilarity(rates, ourUserRates, ourUserLength);
+        //ищем самого похожего пользователя
+        Long alterUserId = getSimilarUserId(cosineSimilarity);
+        if (alterUserId != null) {  //есть такой пользователь
+            //набираем id фильмов которые ЕСТЬ у второго пользователя и НЕТ у нашего пользователя
+            Set<Long> notMatchedIds = likesMap.get(alterUserId)
+                    .stream()
+                    .filter(id -> !likesMap.get(userId).contains(id))
+                    .collect(Collectors.toSet());
+            if (!notMatchedIds.isEmpty()) {  //есть хоть что-то что можем рекомендовать
+                recommendedFilms = filmStorage.getByIds(notMatchedIds);
+            }
+        }
+        return recommendedFilms;
     }
 }

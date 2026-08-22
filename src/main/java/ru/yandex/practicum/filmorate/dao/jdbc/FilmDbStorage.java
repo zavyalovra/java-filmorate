@@ -93,6 +93,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             """;
 
     private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
+
     private static final String GET_COMMON_FILMS_QUERY = """
             SELECT f.*,
                    m.name AS mpa_name
@@ -221,14 +222,4 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return findMany(finalQuery, params);
     }
 
-    @Override
-    public Collection<Film> getByDirector(Long directorId, List<FilmSortField> sortBy) {
-        String orderBy = sortBy.stream()
-                .map(FilmSortField::getSqlField)
-                .collect(Collectors.joining(", "));
-
-        String query = GET_BY_DIRECTOR_QUERY.formatted(orderBy);
-
-        return findMany(query, directorId);
-    }
 }
