@@ -96,16 +96,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     private static final String GET_COMMON_FILMS_QUERY = """
             SELECT f.*,
-                   m.name AS mpa_name
+                   m.name AS mpa_name,
+                   COUNT(fl_all.user_id) AS likes
             FROM films f
-            LEFT JOIN film_directors fd ON f.id = fd.film_id
+            JOIN film_likes fl1 ON f.id = fl1.film_id AND fl1.user_id = ?
+            JOIN film_likes fl2 ON f.id = fl2.film_id AND fl2.user_id = ?
             LEFT JOIN mpa m ON f.mpa_id = m.id
-            WHERE f.id IN (
-                SELECT fl1.film_id
-                FROM film_likes fl1
-                JOIN film_likes fl2 ON fl1.film_id = fl2.film_id
-                WHERE fl1.user_id = ? AND fl2.user_id = ?
-            )
+            LEFT JOIN film_likes fl_all ON f.id = fl_all.film_id
+            GROUP BY f.id
+            ORDER BY likes DESC;
             """;
 
     private static final String FIND_BY_IDS_QUERY = """

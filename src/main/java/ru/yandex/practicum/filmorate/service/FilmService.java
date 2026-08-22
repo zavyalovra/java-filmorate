@@ -159,11 +159,7 @@ public class FilmService {
 
         Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId);
 
-        addFilmDetails(commonFilms);
-
-        return commonFilms.stream()
-                .sorted((f1, f2) -> Integer.compare(getRatingCount(f2), getRatingCount(f1)))
-                .collect(Collectors.toList());
+        return addFilmDetails(commonFilms);
     }
 
     private int getRatingCount(Film film) {
