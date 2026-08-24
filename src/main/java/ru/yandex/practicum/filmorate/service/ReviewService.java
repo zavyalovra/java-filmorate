@@ -63,6 +63,10 @@ public class ReviewService {
     }
 
     public Collection<Review> getByFilmAndCount(Long filmId, int count) {
+        if (filmId == null) {
+            return reviewStorage.getByCount(count);
+        }
+
         filmService.findFilmById(filmId);
         return reviewStorage.getByFilmAndCount(filmId, count);
     }
