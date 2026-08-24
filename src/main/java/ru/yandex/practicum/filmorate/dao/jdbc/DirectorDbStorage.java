@@ -70,6 +70,8 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
 
     @Override
     public void saveDirectorsForFilm(Long filmId, Collection<Director> directors) {
+        jdbc.update("DELETE FROM film_directors WHERE film_id = ?", filmId);
+
         for (Director director : directors) {
             execute(
                     INSERT_QUERY,

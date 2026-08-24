@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.storage.FilmLikesStorage;
-import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Event;
@@ -22,19 +21,19 @@ public class UserService {
     private final UserStorage userStorage;
     private final EventService eventService;
     private final FilmLikesStorage filmLikesStorage;
-    private final FilmStorage filmStorage;
+    private final FilmService filmService;
 
     @Autowired
     public UserService(
             @Qualifier("userDbStorage") UserStorage userStorage,
             EventService eventService,
             FilmLikesStorage filmLikesStorage,
-            @Qualifier("filmDbStorage") FilmStorage filmStorage) {
+            FilmService filmService) {
 
         this.userStorage = userStorage;
         this.eventService = eventService;
         this.filmLikesStorage = filmLikesStorage;
-        this.filmStorage = filmStorage;
+        this.filmService = filmService;
     }
 
     private static Long getSimilarUserId(Map<Long, Double> cosineSimilarity) {
@@ -205,7 +204,7 @@ public class UserService {
                     .filter(id -> !likesMap.get(userId).contains(id))
                     .collect(Collectors.toSet());
             if (!notMatchedIds.isEmpty()) {  //есть хоть что-то что можем рекомендовать
-                recommendedFilms = filmStorage.getByIds(notMatchedIds);
+                recommendedFilms = filmService.findFilmsWithDetails(notMatchedIds);
             }
         }
         return recommendedFilms;

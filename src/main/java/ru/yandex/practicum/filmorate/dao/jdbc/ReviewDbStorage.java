@@ -15,7 +15,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
     private static final String INSERT_QUERY = "INSERT INTO reviews(content, is_positive, user_id, film_id, useful) " +
             "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE reviews " +
-            "SET content = ?, is_positive = ?, user_id = ?, film_id = ?  " +
+            "SET content = ?, is_positive = ? " +
             "WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM reviews " +
             "WHERE id = ?";
@@ -24,9 +24,19 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
     private static final String GET_BY_FILM_QUERY = "SELECT id, content, is_positive, user_id, film_id, useful " +
             "FROM reviews " +
             "WHERE film_id = ? " +
-            "ORDER BY useful DESC " +
+            "ORDER BY useful DESC, id " +
             "LIMIT ? ";
-
+    private static final String GET_BY_COUNT_QUERY = """
+            SELECT  id,
+                    content,
+                    is_positive,
+                    user_id,
+                    film_id,
+                    useful
+            FROM reviews
+            ORDER BY useful DESC, id
+            LIMIT ?
+            """;
     private static final String ADD_LIKE_QUERY = "INSERT INTO reviews_reaction(review_id, user_id, type_reaction) " +
             "VALUES (?, ?, 1)";
     private static final String UPDATE_USEFUL_PLUS_QUERY = "UPDATE reviews " +
@@ -72,8 +82,6 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 UPDATE_QUERY,
                 review.getContent(),
                 review.getIsPositive(),
-                review.getUserId(),
-                review.getFilmId(),
                 review.getReviewId()
         );
         //так как useful мы не апдейтим напрямую, то достаем актуальный из базы
@@ -89,6 +97,11 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
     @Override
     public Optional<Review> findById(Long reviewId) {
         return findOne(FIND_BY_ID_QUERY, reviewId);
+    }
+
+    @Override
+    public Collection<Review> getByCount(int count) {
+        return findMany(GET_BY_COUNT_QUERY, count);
     }
 
     @Override

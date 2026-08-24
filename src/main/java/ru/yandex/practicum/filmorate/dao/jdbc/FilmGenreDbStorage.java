@@ -28,6 +28,8 @@ public class FilmGenreDbStorage extends BaseDbStorage<FilmGenre> implements Film
 
     @Override
     public void saveGenresForFilm(Long filmId, Collection<Genre> genres) {
+        jdbc.update("DELETE FROM film_genres WHERE film_id = ?", filmId);
+
         for (Genre genre : genres) {
             execute(
                     INSERT_QUERY,

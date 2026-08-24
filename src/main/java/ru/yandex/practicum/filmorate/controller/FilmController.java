@@ -53,7 +53,6 @@ public class FilmController {
     }
 
     @DeleteMapping("/{id}/like/{filmId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeFriend(@PathVariable Long id, @PathVariable Long filmId) {
         filmService.removeRate(id, filmId);
     }

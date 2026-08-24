@@ -9,10 +9,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -122,6 +119,11 @@ public class FilmService {
         return film;
     }
 
+    public Collection<Film> findFilmsWithDetails(Set<Long> filmIds) {
+        Collection<Film> films = filmStorage.getByIds(filmIds);
+        return addFilmDetails(films);
+    }
+
     public void addRate(Long filmId, Long userId) {
         checkUserExist(userId);
         checkFilmExist(filmId);
@@ -180,7 +182,9 @@ public class FilmService {
     }
 
     public Collection<Film> findByDirector(Long directorId, List<FilmSortField> sortBy) {
-        Collection<Film> films = filmStorage.getByDirector(directorId, sortBy);
+        Director director = directorStorage.getById(directorId)
+                .orElseThrow(() -> new NotFoundException("Режиссер с id = " + directorId + " не найден"));
+        Collection<Film> films = filmStorage.getByDirector(director.getId(), sortBy);
 
         return addFilmDetails(films);
     }
