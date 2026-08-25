@@ -20,6 +20,16 @@ public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
 
     @Override
+    public boolean deleteUser(Long id) {
+        if (!users.containsKey(id)) {
+            throw new NotFoundException("Пользователь с id = " + id + " не найден");
+        }
+        users.remove(id);
+        log.info("Пользователь с id = {} удален", id);
+        return true;
+    }
+
+    @Override
     public Collection<User> get() {
         return users.values();
     }

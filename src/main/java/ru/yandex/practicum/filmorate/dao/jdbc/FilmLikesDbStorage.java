@@ -7,12 +7,15 @@ import ru.yandex.practicum.filmorate.dao.mappers.FilmLikesRowMapper;
 import ru.yandex.practicum.filmorate.dao.storage.FilmLikesStorage;
 import ru.yandex.practicum.filmorate.model.FilmLike;
 
+import java.util.Collection;
+
 @Repository
 @Qualifier("filmLikesDbStorage")
 public class FilmLikesDbStorage extends BaseDbStorage<FilmLike> implements FilmLikesStorage {
     private static final String ADD_RATE_QUERY = "MERGE INTO film_likes(film_id, user_id) KEY (film_id, user_id) VALUES (?, ?)";
     private static final String REMOVE_RATE_QUERY = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
     private static final String GET_LIKES_QUERY = "SELECT COUNT(*) FROM film_likes WHERE film_id = ?";
+    private static final String GET_ALL_LIKES_QUERY = "SELECT film_id, user_id FROM film_likes";
 
     public FilmLikesDbStorage(JdbcTemplate jdbc, FilmLikesRowMapper mapper) {
         super(jdbc, mapper);
@@ -31,5 +34,10 @@ public class FilmLikesDbStorage extends BaseDbStorage<FilmLike> implements FilmL
     @Override
     public long getLikesForFilm(Long filmId) {
         return findValue(GET_LIKES_QUERY, filmId);
+    }
+
+    @Override
+    public Collection<FilmLike> get() {
+        return findMany(GET_ALL_LIKES_QUERY);
     }
 }

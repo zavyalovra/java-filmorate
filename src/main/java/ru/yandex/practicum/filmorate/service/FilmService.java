@@ -4,18 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.filmorate.dao.jdbc.FilmLikesDbStorage;
-import ru.yandex.practicum.filmorate.dao.jdbc.MpaDbStorage;
-import ru.yandex.practicum.filmorate.dao.storage.FilmGenreStorage;
+import ru.yandex.practicum.filmorate.dao.storage.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
-import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
-import ru.yandex.practicum.filmorate.dao.storage.GenreStorage;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,8 +18,10 @@ public class FilmService {
     private final UserStorage userStorage;
     private final GenreStorage genreStorage;
     private final FilmGenreStorage filmGenreStorage;
-    private final MpaDbStorage mpaDbStorage;
-    private final FilmLikesDbStorage filmLikesDbStorage;
+    private final MpaStorage mpaStorage;
+    private final FilmLikesStorage filmLikesStorage;
+    private final EventService eventService;
+    private final DirectorStorage directorStorage;
 
     @Autowired
     public FilmService(
@@ -33,53 +29,50 @@ public class FilmService {
             @Qualifier("userDbStorage") UserStorage userStorage,
             @Qualifier("genreDbStorage") GenreStorage genreStorage,
             @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
-            @Qualifier("mpaDbStorage") MpaDbStorage mpaDbStorage,
-            @Qualifier("filmLikesDbStorage") FilmLikesDbStorage filmLikesDbStorage) {
+            @Qualifier("mpaDbStorage") MpaStorage mpaStorage,
+            @Qualifier("filmLikesDbStorage") FilmLikesStorage filmLikesStorage,
+            @Qualifier("directorDbStorage") DirectorStorage directorStorage,
+            EventService eventService) {
 
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.genreStorage = genreStorage;
         this.filmGenreStorage = filmGenreStorage;
-        this.mpaDbStorage = mpaDbStorage;
-        this.filmLikesDbStorage = filmLikesDbStorage;
+        this.mpaStorage = mpaStorage;
+        this.filmLikesStorage = filmLikesStorage;
+        this.directorStorage = directorStorage;
+        this.eventService = eventService;
     }
 
     public Collection<Film> findAll() {
         Collection<Film> films = filmStorage.get();
 
-        Set<Long> filmIds = films.stream()
-                .map(Film::getId)
-                .collect(Collectors.toSet());
-
-        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
-
-        for (Film film : films) {
-            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
-        }
-
-        return films;
+        return addFilmDetails(films);
     }
 
     @Transactional
     public Film create(Film film) {
         if (film.getMpa() != null) {
-            Mpa mpa = mpaDbStorage.getById(film.getMpa().getId())
+            Mpa mpa = mpaStorage.getById(film.getMpa().getId())
                     .orElseThrow(() -> new NotFoundException("Рейтинг с id = " + film.getMpa().getId() + " не найден"));
             film.setMpa(mpa);
         }
 
-        Set<Long> genreIds = film.getGenres().stream()
-                .map(Genre::getId)
-                .collect(Collectors.toSet());
+        Set<Long> genreIds = film.getGenres().stream().map(Genre::getId).collect(Collectors.toSet());
         Collection<Genre> genres = genreStorage.getByIds(genreIds);
 
         if (genres.size() != genreIds.size()) {
             throw new NotFoundException("Один или несколько жанров не существуют");
         }
 
+        Set<Long> directorsIds = film.getDirectors().stream().map(Director::getId).collect(Collectors.toSet());
+        Collection<Director> directors = directorStorage.getByIds(directorsIds);
+
         film.setGenres(genres);
+        film.setDirectors(directors);
         Film created = filmStorage.create(film);
         filmGenreStorage.saveGenresForFilm(created.getId(), created.getGenres());
+        directorStorage.saveDirectorsForFilm(created.getId(), created.getDirectors());
 
         return findFilmById(created.getId());
     }
@@ -90,23 +83,27 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + film.getId() + " не найден"));
 
         if (film.getMpa() != null) {
-            Mpa mpa = mpaDbStorage.getById(film.getMpa().getId())
+            Mpa mpa = mpaStorage.getById(film.getMpa().getId())
                     .orElseThrow(() -> new NotFoundException("Рейтинг с id = " + film.getMpa().getId() + " не найден"));
             film.setMpa(mpa);
         }
 
-        Set<Long> genreIds = film.getGenres().stream()
-                .map(Genre::getId)
-                .collect(Collectors.toSet());
+        Set<Long> genreIds = film.getGenres().stream().map(Genre::getId).collect(Collectors.toSet());
         Collection<Genre> genres = genreStorage.getByIds(genreIds);
         if (genres.size() != genreIds.size()) {
             throw new NotFoundException("Один или несколько жанров не существуют");
         }
 
+        Set<Long> directorsIds = film.getDirectors().stream().map(Director::getId).collect(Collectors.toSet());
+        Collection<Director> directors = directorStorage.getByIds(directorsIds);
+
         Film updatedFilm = filmStorage.update(film);
         filmGenreStorage.saveGenresForFilm(updatedFilm.getId(), genres);
+        directorStorage.saveDirectorsForFilm(updatedFilm.getId(), directors);
 
         updatedFilm.setGenres(genres);
+        updatedFilm.setDirectors(directors);
+
         return updatedFilm;
     }
 
@@ -115,46 +112,106 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
 
         Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(Set.of(film.getId()));
+        Map<Long, Set<Director>> directorsMap = directorStorage.getDirectorsForFilms(Set.of(film.getId()));
         film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
+        film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
 
         return film;
     }
 
-    public void addRate(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
-        User user = userStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+    public Collection<Film> findFilmsWithDetails(Set<Long> filmIds) {
+        Collection<Film> films = filmStorage.getByIds(filmIds);
+        return addFilmDetails(films);
+    }
 
-        filmLikesDbStorage.addLike(filmId, userId);
+    public void addRate(Long filmId, Long userId) {
+        checkUserExist(userId);
+        checkFilmExist(filmId);
+
+        filmLikesStorage.addLike(filmId, userId);
+
+        eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.ADD, filmId);
     }
 
     public void removeRate(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
-        User user = userStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+        checkFilmExist(filmId);
+        checkUserExist(userId);
 
-        filmLikesDbStorage.removeLike(filmId, userId);
+        filmLikesStorage.removeLike(filmId, userId);
+
+        eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.REMOVE, filmId);
     }
 
-    public Collection<Film> getPopularFilms(int count) {
-        Collection<Film> films = filmStorage.getPopular(count);
-
-        Set<Long> filmIds = films.stream()
-                .map(Film::getId)
-                .collect(Collectors.toSet());
-
-        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
-
-        for (Film film : films) {
-            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
+    public Collection<Film> getPopularFilms(int count, Long genreID, Integer year) {
+        if (year != null && year < 1895) {
+            throw new ValidationException("Год не может быть раньше 1895");
         }
+        Collection<Film> films = filmStorage.getPopular(count, genreID, year);
 
-        return films;
+        return addFilmDetails(films);
+    }
+
+    public void deleteFilm(Long filmId) {
+        Film film = findFilmById(filmId);
+        filmStorage.deleteFilm(film.getId());
+    }
+
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        checkUserExist(userId);
+        checkUserExist(friendId);
+
+        Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId);
+
+        return addFilmDetails(commonFilms);
     }
 
     private int getRatingCount(Film film) {
         return film.getRating() != null ? film.getRating().size() : 0;
+    }
+
+    public Collection<Film> search(String query, List<FilmByField> by) {
+        if (query.isBlank()) {
+            throw new ValidationException("Параметр query не может быть пустым");
+        }
+        if (by.isEmpty()) {
+            throw new ValidationException("Параметр by не может быть пустым");
+        }
+
+        Collection<Film> films = filmStorage.search(query, by);
+
+        return addFilmDetails(films);
+    }
+
+    public Collection<Film> findByDirector(Long directorId, List<FilmSortField> sortBy) {
+        Director director = directorStorage.getById(directorId)
+                .orElseThrow(() -> new NotFoundException("Режиссер с id = " + directorId + " не найден"));
+        Collection<Film> films = filmStorage.getByDirector(director.getId(), sortBy);
+
+        return addFilmDetails(films);
+    }
+
+    private void checkUserExist(Long userId) {
+        userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+    }
+
+    private void checkFilmExist(Long filmId) {
+        filmStorage.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+    }
+
+    private Collection<Film> addFilmDetails(Collection<Film> films) {
+
+        Set<Long> filmIds = films.stream().map(Film::getId).collect(Collectors.toSet());
+
+        Map<Long, Set<Genre>> genresMap = genreStorage.getGenresForFilms(filmIds);
+        Map<Long, Set<Director>> directorsMap = directorStorage.getDirectorsForFilms(filmIds);
+
+        for (Film film : films) {
+            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
+            film.setDirectors(directorsMap.getOrDefault(film.getId(), Set.of()));
+        }
+
+        return films;
     }
 }

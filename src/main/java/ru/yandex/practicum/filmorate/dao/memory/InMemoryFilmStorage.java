@@ -7,6 +7,8 @@ import ru.yandex.practicum.filmorate.dao.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmSortField;
+import ru.yandex.practicum.filmorate.model.FilmByField;
 
 import java.util.*;
 
@@ -15,6 +17,26 @@ import java.util.*;
 @Qualifier("filmInMemoryStorage")
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
+
+    @Override
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        throw new NotFoundException("Метод getCommonFilms не поддерживается в InMemoryFilmStorage");
+    }
+
+    @Override
+    public boolean deleteFilm(Long id) {
+        if (!films.containsKey(id)) {
+            throw new NotFoundException("Фильм с id = " + id + " не найден");
+        }
+        films.remove(id);
+        log.info("Фильм с id = {} удален", id);
+        return true;
+    }
+
+    @Override
+    public Collection<Film> getByDirector(Long directorId, List<FilmSortField> sortBy) {
+        throw new NotFoundException("Метод getByDirector не поддерживается в InMemoryFilmStorage");
+    }
 
     @Override
     public Collection<Film> get() {
@@ -56,8 +78,18 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getPopular(int count) {
+    public Collection<Film> getPopular(int count, Long genreId, Integer year) {
         throw new NotFoundException("Метод getPopular не поддерживается в InMemoryFilmStorage");
+    }
+
+    @Override
+    public Collection<Film> getByIds(Set<Long> genresIds) {
+        throw new NotFoundException("Метод getByIds не поддерживается в InMemoryFilmStorage");
+    }
+
+    @Override
+    public Collection<Film> search(String query, List<FilmByField> by) {
+        throw new NotFoundException("Метод search не поддерживается в InMemoryFilmStorage");
     }
 
     private long getNextId() {

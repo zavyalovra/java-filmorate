@@ -3,8 +3,8 @@ package ru.yandex.practicum.filmorate.dao.jdbc;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.dao.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.dao.storage.UserStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.UserFriendship.Status;
@@ -55,9 +55,15 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             WHERE f1.user_id = ?
               AND f2.user_id = ?
             """;
+    private static final String DELETE_USER_QUERY = "DELETE FROM users WHERE id = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, UserRowMapper mapper) {
         super(jdbc, mapper);
+    }
+
+    @Override
+    public boolean deleteUser(Long userId) {
+        return delete(DELETE_USER_QUERY, userId);
     }
 
     @Override
@@ -67,6 +73,9 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public User create(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
         long id = insert(
                 INSERT_QUERY,
                 user.getEmail(),
@@ -80,6 +89,9 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public User update(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
         update(
                 UPDATE_QUERY,
                 user.getEmail(),
