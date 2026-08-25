@@ -29,6 +29,7 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
     private static final String INSERT_DIRECTOR_QUERY = "INSERT INTO directors(name) VALUES (?)";
     private static final String UPDATE_DIRECTOR_QUERY = "UPDATE directors SET name = ? WHERE id = ?";
     private static final String DELETE_DIRECTOR_QUERY = "DELETE FROM directors WHERE id = ?";
+    private static final String DELETE_DIRECTOR_BY_FILM_QUERY = "DELETE FROM film_directors WHERE film_id = ?";
 
     public DirectorDbStorage(JdbcTemplate jdbc, DirectorRowMapper mapper) {
         super(jdbc, mapper);
@@ -70,7 +71,7 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
 
     @Override
     public void saveDirectorsForFilm(Long filmId, Collection<Director> directors) {
-        jdbc.update("DELETE FROM film_directors WHERE film_id = ?", filmId);
+        execute(DELETE_DIRECTOR_BY_FILM_QUERY, filmId);
 
         for (Director director : directors) {
             execute(

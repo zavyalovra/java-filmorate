@@ -23,7 +23,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                    f.duration,
                    m.id   AS mpa_id,
                    m.name AS mpa_name,
-                   COUNT(fl.user_id) AS likes
+                   COUNT(DISTINCT fl.user_id) AS likes
             FROM films f
             LEFT JOIN film_directors as fd ON fd.film_id = f.id
             LEFT JOIN directors as d ON d.id = fd.director_id
@@ -187,8 +187,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             params.add(year);
         }
         params.add(count);
-        //"5=5" так как форматирование требует чтобы это не было пустым
-        String where = condition.isEmpty() ? "5=5" : String.join(" AND ", condition);
+        //"1=1" так как форматирование требует чтобы это не было пустым
+        String where = condition.isEmpty() ? "1=1" : String.join(" AND ", condition);
         String finalQuery = GET_POPULAR_QUERY.formatted(where);
         return findMany(finalQuery,params.toArray());
     }

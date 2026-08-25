@@ -15,7 +15,12 @@ public class EventDbStorage extends BaseDbStorage<Event> implements EventStorage
             INSERT INTO events (timestamp, user_id, event_type, operation, entity_id)
             VALUES (?, ?, ?, ?, ?)
             """;
-    private static final String FIND_FEEDS_QUERY = "SELECT * FROM events WHERE user_id = ?";
+    private static final String FIND_FEEDS_QUERY = """
+            SELECT *
+            FROM events
+            WHERE user_id = ?
+            ORDER BY timestamp ASC
+            """;
 
     public EventDbStorage(JdbcTemplate jdbc, EventRowMapper mapper) {
         super(jdbc, mapper);

@@ -52,9 +52,9 @@ public class FilmController {
         filmService.addRate(id, filmId);
     }
 
-    @DeleteMapping("/{id}/like/{filmId}")
-    public void removeFriend(@PathVariable Long id, @PathVariable Long filmId) {
-        filmService.removeRate(id, filmId);
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.removeRate(id, userId);
     }
 
     @GetMapping("/popular")

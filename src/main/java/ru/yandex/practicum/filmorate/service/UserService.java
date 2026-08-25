@@ -166,8 +166,9 @@ public class UserService {
     }
 
     public void deleteUser(Long userId) {
-        userStorage.deleteUser(userId);
-        log.info("Удаление пользователя с id = {}", userId);
+        User user = findUserById(userId);
+        userStorage.deleteUser(user.getId());
+        log.info("Удаление пользователя с id = {}", user.getId());
     }
 
     public Collection<Film> getRecommendations(Long userId) {
